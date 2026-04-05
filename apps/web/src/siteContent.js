@@ -414,15 +414,43 @@ export const faqs = [
   {
     question: "Does NBGS Travel require the travel payments all at once?",
     answer:
-      "No, NBGS Travel does not require you to pay for your trip all at once. We offer flexible payment options to suit your financial planning. You can pay in full or use a structured installment plan. To confirm your booking, we generally require a deposit, but some packages may state a different amount."
+      "No. NBGS Travel offers flexible payment options to suit your financial planning. You can pay in full or use a structured payment plan. To confirm your booking, NBGS Travel generally requires a 25% deposit of the total package amount, although some packages may state a different deposit requirement."
   },
-  { question: "Can I request a customized package if I don't see the destination I want on the page?" },
-  { question: "Can I choose my own travel dates?" },
-  { question: "What Is the group size for your trips?" },
-  { question: "Can I request a private trip if I can't join the group trips?" },
-  { question: "Is it safe to use my banking information on your travel site?" },
-  { question: "What if I am unable to travel after booking?" },
-  { question: "Is travel insurance included in the packages?" }
+  {
+    question: "Can I request a customized package if I don't see the destination I want on the page?",
+    answer:
+      "Yes. NBGS Travel can create a customized travel package if your preferred destination is not listed. The team can help design a more personal itinerary with your chosen destination, tailored activities and experiences, and accommodation and transportation that fit your style and budget."
+  },
+  {
+    question: "Can I choose my own travel dates?",
+    answer:
+      "Yes. NBGS Travel allows travelers to choose their own travel dates for private trips and customized packages. Group trips usually run on a set schedule, but if you are interested in a group-style experience with different dates, the team can guide you on alternative options."
+  },
+  {
+    question: "What Is the group size for your trips?",
+    answer:
+      "NBGS Travel group sizes typically range from 8 to 12 participants. This allows for a more engaging travel experience while still giving travelers more personal support throughout the trip."
+  },
+  {
+    question: "Can I request a private trip if I can't join the group trips?",
+    answer:
+      "Absolutely. NBGS Travel offers private trip options for travelers who cannot join a scheduled group trip. Private trips can be tailored around your interests, preferred pace, and travel goals while still giving you dedicated planning support and flexibility."
+  },
+  {
+    question: "Is it safe to use my banking information on your travel site?",
+    answer:
+      "Yes. NBGS Travel uses trusted payment processing solutions designed to protect customer information. Transactions are handled through secure systems that use encryption and recognized payment-security standards."
+  },
+  {
+    question: "What if I am unable to travel after booking?",
+    answer:
+      "If you are unable to travel after booking, the cancellation policy for your package will apply. Depending on timing, NBGS Travel may be able to assist with a partial refund or a transfer to another date, subject to package terms and availability. It is best to contact the team as soon as possible if your plans change."
+  },
+  {
+    question: "Is travel insurance included in the packages?",
+    answer:
+      "Travel insurance is not included in standard packages unless it is specifically stated. NBGS Travel strongly recommends that travelers purchase comprehensive travel insurance to cover unexpected events before departure."
+  }
 ];
 
 export const categoryCards = [

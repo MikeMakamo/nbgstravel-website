@@ -15,12 +15,13 @@ const navItems = [
   {
     to: "/packages",
     label: "PACKAGES",
+    activePrefixes: ["/packages"],
     children: [
       { to: "/packages", label: "Travel Packages" },
       { to: "/group-trips", label: "Group Trips" }
     ]
   },
-  { to: "/group-trips", label: "GROUP TRIPS" },
+  { to: "/group-trips", label: "GROUP TRIPS", activePrefixes: ["/group-trips"] },
   { to: "/visa", label: "VISA" },
   { to: "/contact", label: "CONTACT US" }
 ];
@@ -56,6 +57,10 @@ const socialLinks = [
 ];
 
 function isItemActive(pathname, item) {
+  if (item.activePrefixes?.length) {
+    return item.activePrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  }
+
   if (item.to === "/") return pathname === "/";
   if (pathname === item.to) return true;
   if (pathname.startsWith(`${item.to}/`)) return true;
