@@ -248,7 +248,7 @@ CREATE TABLE IF NOT EXISTS visa_applications (
 
 CREATE TABLE IF NOT EXISTS abandoned_leads (
   id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-  lead_type ENUM('package_booking', 'visa_application') NOT NULL,
+  lead_type ENUM('package_booking', 'visa_application', 'homepage_inquiry') NOT NULL,
   package_id BIGINT UNSIGNED NULL,
   visa_offering_id BIGINT UNSIGNED NULL,
   full_name VARCHAR(200) NULL,

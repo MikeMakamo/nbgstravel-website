@@ -1,40 +1,51 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { getReviews, submitInquiry } from "../api.js";
-import { fallbackReviews } from "../data/fallback.js";
-import { categoryCards, faqs, homeServices, liveMedia } from "../siteContent.js";
+import { HomeInquiryModal } from "../components/forms/HomeInquiryModal.jsx";
+import { categoryCards, faqs, homeServices, liveMedia, manualReviews } from "../siteContent.js";
 
 export function HomePage() {
-  const [reviews, setReviews] = useState(fallbackReviews);
-  const [inquiry, setInquiry] = useState({ fullName: "", phoneNumber: "", email: "", message: "" });
-  const [message, setMessage] = useState("");
+  const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
+  const [showAllTrips, setShowAllTrips] = useState(false);
+  const [reviewStartIndex, setReviewStartIndex] = useState(0);
+  const [reviewsPerView, setReviewsPerView] = useState(3);
+  const [expandedReviewId, setExpandedReviewId] = useState(null);
 
   useEffect(() => {
-    getReviews()
-      .then((data) => setReviews(data.reviews))
-      .catch(() => setReviews(fallbackReviews));
+    function updateReviewViewport() {
+      if (window.innerWidth <= 720) {
+        setReviewsPerView(1);
+        return;
+      }
+
+      if (window.innerWidth <= 1100) {
+        setReviewsPerView(2);
+        return;
+      }
+
+      setReviewsPerView(3);
+    }
+
+    updateReviewViewport();
+    window.addEventListener("resize", updateReviewViewport);
+    return () => window.removeEventListener("resize", updateReviewViewport);
   }, []);
 
-  async function handleInquiry(event) {
-    event.preventDefault();
-    try {
-      await submitInquiry({
-        inquiryType: "homepage",
-        fullName: inquiry.fullName,
-        phoneNumber: inquiry.phoneNumber,
-        email: inquiry.email,
-        message: inquiry.message,
-        sourcePageUrl: window.location.href
-      });
-      setMessage("Your inquiry has been received. An NBGS Travel consultant will contact you shortly.");
-      setInquiry({ fullName: "", phoneNumber: "", email: "", message: "" });
-    } catch (error) {
-      setMessage(error.message);
-    }
-  }
+  const displayedTrips = showAllTrips ? liveMedia.previousTrips : liveMedia.previousTrips.slice(0, 4);
+  const maxReviewIndex = Math.max(manualReviews.length - reviewsPerView, 0);
+
+  useEffect(() => {
+    setReviewStartIndex((current) => Math.min(current, maxReviewIndex));
+  }, [maxReviewIndex]);
+
+  const visibleReviews = useMemo(
+    () => manualReviews.slice(reviewStartIndex, reviewStartIndex + reviewsPerView),
+    [reviewStartIndex, reviewsPerView]
+  );
 
   return (
     <>
+      <HomeInquiryModal open={isInquiryModalOpen} onClose={() => setIsInquiryModalOpen(false)} />
+
       <section className="hero-banner">
         <div className="hero-copy centered-hero-copy">
           <h1>Explore and see the world</h1>
@@ -54,9 +65,9 @@ export function HomePage() {
               activities to match your budget and preferences.
             </p>
             <div className="intro-cta-row">
-              <a href="#home-inquiry" className="accent-button">
+              <button type="button" className="accent-button" onClick={() => setIsInquiryModalOpen(true)}>
                 Plan My Trip
-              </a>
+              </button>
               <Link to="/packages" className="secondary-button">
                 View Packages
               </Link>
@@ -81,7 +92,7 @@ export function HomePage() {
 
       <section className="service-section">
         <div className="container">
-          <h2 className="section-title">Get to know our travel services</h2>
+          <h2 className="section-title service-simple-title">Get to know our travel services</h2>
           <div className="service-grid">
             {homeServices.map((service) => (
               <article key={service.title} className="service-card">
@@ -91,7 +102,7 @@ export function HomePage() {
             ))}
           </div>
           <div className="service-link-row">
-            <Link to="/visa" className="subtle-link">
+            <Link to="/visa" className="service-section-button">
               Visa Services
             </Link>
           </div>
@@ -99,19 +110,19 @@ export function HomePage() {
       </section>
 
       <section className="continents-section">
-        <div className="container">
+        <div className="continents-section-header">
           <h2 className="section-title">Planning Your Journey Starts Here</h2>
-          <div className="continents-grid">
-            {liveMedia.continents.map((continent) => (
-              <Link key={continent.title} to="/packages" className="continent-card">
-                <img src={continent.image} alt={continent.title} />
-                <div className="continent-overlay">
-                  <strong>{continent.title}</strong>
-                  <span>{continent.subtitle}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+        </div>
+        <div className="continents-grid">
+          {liveMedia.continents.map((continent, index) => (
+            <Link key={continent.title} to="/packages" className={`continent-card continent-card-${index + 1}`}>
+              <img src={continent.image} alt={continent.title} />
+              <div className="continent-overlay">
+                <strong>{continent.title}</strong>
+                <span>{continent.subtitle}</span>
+              </div>
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -121,7 +132,9 @@ export function HomePage() {
           <div className="faq-list">
             {faqs.map((faq, index) => (
               <details key={faq.question} open={index === 0} className="faq-item">
-                <summary>{faq.question}</summary>
+                <summary>
+                  <span>{faq.question}</span>
+                </summary>
                 {faq.answer ? <p>{faq.answer}</p> : null}
               </details>
             ))}
@@ -130,16 +143,78 @@ export function HomePage() {
       </section>
 
       <section className="reviews-section">
-        <div className="container narrow-section">
+        <div className="container reviews-carousel-shell">
           <h2 className="section-title">What our clients have to say</h2>
-          <div className="review-list">
-            {reviews.slice(0, 3).map((review) => (
-              <article key={review.id} className="review-card">
-                <div className="review-stars">{"★".repeat(review.rating || 5)}</div>
-                <p>{review.review_text}</p>
-                <strong>{review.reviewer_name}</strong>
-              </article>
-            ))}
+
+          <div className="review-carousel">
+            <button
+              type="button"
+              className="review-carousel-arrow review-carousel-arrow-left"
+              onClick={() => setReviewStartIndex((current) => Math.max(current - 1, 0))}
+              disabled={reviewStartIndex === 0}
+              aria-label="Previous reviews"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m14 6-6 6 6 6" />
+              </svg>
+            </button>
+
+            <div className="review-list" style={{ "--reviews-per-view": reviewsPerView }}>
+              {visibleReviews.map((review) => {
+                const isExpanded = expandedReviewId === review.id;
+
+                return (
+                  <article key={review.id} className="review-card review-carousel-card">
+                    <div className="review-avatar-wrap">
+                      <div className="review-avatar" style={{ backgroundColor: review.avatar_tone }}>
+                        {review.avatar_letter}
+                      </div>
+                      <span className="review-google-badge" aria-hidden="true">
+                        <span className="review-google-g">G</span>
+                      </span>
+                    </div>
+
+                    <strong>{review.reviewer_name}</strong>
+                    <span className="review-age">{review.review_age}</span>
+
+                    <div className="review-meta-row">
+                      <div className="review-stars">
+                        {Array.from({ length: review.rating || 5 }, (_, index) => (
+                          <span key={index}>★</span>
+                        ))}
+                      </div>
+                      <span className="review-verified" aria-label="Verified review">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M12 2 9.9 4.1 7 3.6 6.5 6.5 3.6 7l.5 2.9L2 12l2.1 2.1-.5 2.9 2.9.5.5 2.9 2.9-.5L12 22l2.1-2.1 2.9.5.5-2.9 2.9-.5-.5-2.9L22 12l-2.1-2.1.5-2.9-2.9-.5-.5-2.9-2.9.5L12 2Zm-1 13-3-3 1.4-1.4 1.6 1.6 4-4L16.4 9 11 15Z" />
+                        </svg>
+                      </span>
+                    </div>
+
+                    <p className={`review-text${isExpanded ? " is-expanded" : ""}`}>{review.review_text}</p>
+
+                    <button
+                      type="button"
+                      className="review-read-more"
+                      onClick={() => setExpandedReviewId(isExpanded ? null : review.id)}
+                    >
+                      {isExpanded ? "Read less" : "Read more"}
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              className="review-carousel-arrow review-carousel-arrow-right"
+              onClick={() => setReviewStartIndex((current) => Math.min(current + 1, maxReviewIndex))}
+              disabled={reviewStartIndex >= maxReviewIndex}
+              aria-label="Next reviews"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m10 6 6 6-6 6" />
+              </svg>
+            </button>
           </div>
         </div>
       </section>
@@ -148,31 +223,26 @@ export function HomePage() {
         <div className="container">
           <h2 className="section-title">Previous Trips</h2>
           <div className="previous-trips-grid">
-            {liveMedia.previousTrips.map((image, index) => (
-              <div key={image} className="trip-photo">
+            {displayedTrips.map((image, index) => (
+              <div key={`${image}-${index}`} className={`trip-photo trip-photo-${(index % 5) + 1}${index >= 4 ? " trip-photo-reveal" : ""}`}>
                 <img src={image} alt={`NBGS previous trip ${index + 1}`} />
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className="contact-strip" id="home-inquiry">
-        <div className="container inquiry-inline-layout">
-          <div>
-            <h2 className="section-title left-aligned">Start your travel inquiry</h2>
-            <p>Share your preferred destination and dates and our agents will help shape the journey.</p>
-          </div>
-          <form className="mini-inquiry-form" onSubmit={handleInquiry}>
-            <input placeholder="Name and surname" value={inquiry.fullName} onChange={(event) => setInquiry({ ...inquiry, fullName: event.target.value })} required />
-            <input placeholder="Phone number" value={inquiry.phoneNumber} onChange={(event) => setInquiry({ ...inquiry, phoneNumber: event.target.value })} required />
-            <input type="email" placeholder="Email" value={inquiry.email} onChange={(event) => setInquiry({ ...inquiry, email: event.target.value })} required />
-            <textarea placeholder="Where would you like to go?" value={inquiry.message} onChange={(event) => setInquiry({ ...inquiry, message: event.target.value })} />
-            <button type="submit" className="accent-button">
-              Send Inquiry
-            </button>
-            {message ? <p className="form-message">{message}</p> : null}
-          </form>
+          {liveMedia.previousTrips.length > 4 ? (
+            <div className="gallery-action-row">
+              <button
+                type="button"
+                className={`gallery-more-button${showAllTrips ? " is-open" : ""}`}
+                onClick={() => setShowAllTrips((current) => !current)}
+              >
+                {showAllTrips ? "Show Less" : "More"}
+                <span className="gallery-more-icon" aria-hidden="true">
+                  +
+                </span>
+              </button>
+            </div>
+          ) : null}
         </div>
       </section>
     </>

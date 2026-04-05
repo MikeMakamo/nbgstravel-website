@@ -29,6 +29,7 @@ export function VisaApplicationModal({ open, onClose, visa }) {
 
   useEffect(() => {
     if (open) {
+      submittedRef.current = false;
       localStorage.setItem(storageKey, JSON.stringify(form));
     }
   }, [form, open, storageKey]);
@@ -90,52 +91,95 @@ export function VisaApplicationModal({ open, onClose, visa }) {
 
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal-card">
-        <button type="button" className="modal-close" onClick={handleClose}>
-          Close
-        </button>
-        <h3>Apply for {visa.title}</h3>
-        <p>Complete the details below, then continue to secure `PayFast` checkout.</p>
-        <div className="quote-card">
-          <span>Application fee</span>
-          <strong>{formatCurrency(visa.application_fee, visa.currency_code || "ZAR")}</strong>
-        </div>
-        <form className="stack-form" onSubmit={handleSubmit}>
-          <label>
-            Name and surname
-            <input value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} required />
-          </label>
-          <label>
-            Phone number
-            <input value={form.phoneNumber} onChange={(event) => setForm({ ...form, phoneNumber: event.target.value })} required />
-          </label>
-          <label>
-            Nationality
-            <input value={form.nationality} onChange={(event) => setForm({ ...form, nationality: event.target.value })} required />
-          </label>
-          <label>
-            Number of persons
-            <input
-              type="number"
-              min="1"
-              value={form.numberOfPersons}
-              onChange={(event) => setForm({ ...form, numberOfPersons: event.target.value })}
-              required
-            />
-          </label>
-          <label>
-            Travelling date
-            <input type="date" value={form.travelDate} onChange={(event) => setForm({ ...form, travelDate: event.target.value })} required />
-          </label>
-          <label>
-            Returning date
-            <input type="date" value={form.returnDate} onChange={(event) => setForm({ ...form, returnDate: event.target.value })} required />
-          </label>
-          <button type="submit" className="primary-button" disabled={submitting}>
-            {submitting ? "Processing..." : "Apply and continue to payment"}
+      <div className="modal-card modal-card-wide">
+        <div className="modal-topbar">
+          <span className="modal-kicker">VISA SERVICE</span>
+          <button type="button" className="modal-close" onClick={handleClose} aria-label="Close dialog">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 6 12 12M18 6 6 18" />
+            </svg>
           </button>
-          {message ? <p className="form-message">{message}</p> : null}
-        </form>
+        </div>
+
+        <div className="modal-split">
+          <section className="modal-brand-panel">
+            <p className="modal-panel-eyebrow">SECURE APPLICATION CHECKOUT</p>
+            <h3 className="modal-title">Apply for {visa.title}</h3>
+            <p className="modal-copy">
+              Complete your application details below, then continue through secure PayFast checkout to reserve the
+              service.
+            </p>
+
+            <div className="quote-card">
+              <span>Application fee</span>
+              <strong>{formatCurrency(visa.application_fee, visa.currency_code || "ZAR")}</strong>
+            </div>
+
+            <div className="modal-feature-stack">
+              <div className="modal-feature-card">
+                <strong>Visa type</strong>
+                <span>{visa.title}</span>
+              </div>
+              <div className="modal-feature-card">
+                <strong>Payment method</strong>
+                <span>Secure PayFast checkout after submission.</span>
+              </div>
+            </div>
+
+            <div className="modal-note-card">
+              <span>Your form is saved while you type.</span>
+              <strong>We can still follow up if you leave mid-way.</strong>
+            </div>
+          </section>
+
+          <section className="modal-form-panel">
+            <h4 className="modal-form-title">Application Details</h4>
+            <p className="modal-form-copy">Fill in the traveler information to continue to payment.</p>
+            <div className="modal-mobile-summary">
+              <div className="quote-card">
+                <span>Application fee</span>
+                <strong>{formatCurrency(visa.application_fee, visa.currency_code || "ZAR")}</strong>
+              </div>
+            </div>
+
+            <form className="stack-form modal-form" onSubmit={handleSubmit}>
+              <label className="modal-form-field">
+                <span className="field-label">Name and surname</span>
+                <input value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} required />
+              </label>
+              <label className="modal-form-field">
+                <span className="field-label">Phone number</span>
+                <input value={form.phoneNumber} onChange={(event) => setForm({ ...form, phoneNumber: event.target.value })} required />
+              </label>
+              <label className="modal-form-field">
+                <span className="field-label">Nationality</span>
+                <input value={form.nationality} onChange={(event) => setForm({ ...form, nationality: event.target.value })} required />
+              </label>
+              <label className="modal-form-field">
+                <span className="field-label">Number of persons</span>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.numberOfPersons}
+                  onChange={(event) => setForm({ ...form, numberOfPersons: event.target.value })}
+                  required
+                />
+              </label>
+              <label className="modal-form-field">
+                <span className="field-label">Travelling date</span>
+                <input type="date" value={form.travelDate} onChange={(event) => setForm({ ...form, travelDate: event.target.value })} required />
+              </label>
+              <label className="modal-form-field">
+                <span className="field-label">Returning date</span>
+                <input type="date" value={form.returnDate} onChange={(event) => setForm({ ...form, returnDate: event.target.value })} required />
+              </label>
+              <button type="submit" className="primary-button modal-submit" disabled={submitting}>
+                {submitting ? "Processing..." : "Apply and continue to payment"}
+              </button>
+              {message ? <p className="form-message">{message}</p> : null}
+            </form>
+          </section>
+        </div>
       </div>
     </div>
   );

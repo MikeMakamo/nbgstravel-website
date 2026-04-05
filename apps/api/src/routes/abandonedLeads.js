@@ -5,7 +5,7 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 import { sendTransactionalEmail, bookingEmailMarkup } from "../services/emailService.js";
 
 const abandonedLeadSchema = z.object({
-  leadType: z.enum(["package_booking", "visa_application"]),
+  leadType: z.enum(["package_booking", "visa_application", "homepage_inquiry"]),
   packageId: z.coerce.number().int().positive().optional().nullable(),
   visaOfferingId: z.coerce.number().int().positive().optional().nullable(),
   fullName: z.string().optional().nullable(),
