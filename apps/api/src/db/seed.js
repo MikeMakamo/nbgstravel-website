@@ -129,34 +129,106 @@ async function seedPackages() {
 async function seedVisas() {
   const visas = [
     {
-      title: "Dubai Visa",
+      title: "UAE Tourist Visa",
+      aliases: ["Dubai Visa", "UAE Tourist Visa"],
       country: "United Arab Emirates",
-      processingTimeLabel: "5 - 7 working days",
-      applicationFee: 1999,
-      description: "Tourist visa support with guided application handling.",
+      processingTimeLabel: "24 - 72 Hours",
+      applicationFee: 2500,
+      description: "Tourist visa support with guided application handling for UAE travel.",
       status: "published"
     },
     {
-      title: "Turkey Visa",
+      title: "Turkey E-Visa",
+      aliases: ["Turkey Visa", "Turkey E-Visa"],
       country: "Turkey",
-      processingTimeLabel: "7 - 10 working days",
-      applicationFee: 2499,
-      description: "Visa application support for leisure and short-stay travel.",
+      processingTimeLabel: "24 Hours",
+      applicationFee: 500,
+      description: "Fast visa support for Turkey travel with a streamlined online application flow.",
+      status: "published"
+    },
+    {
+      title: "Indonesian Visa",
+      aliases: ["Indonesian Visa"],
+      country: "Indonesia",
+      processingTimeLabel: "24 Hours",
+      applicationFee: 1000,
+      description: "Structured visa application support for Indonesia-bound travel.",
+      status: "published"
+    },
+    {
+      title: "Kenyan Visa",
+      aliases: ["Kenyan Visa"],
+      country: "Kenya",
+      processingTimeLabel: "24 Hours",
+      applicationFee: 500,
+      description: "Visa support for Kenya travel with quick application guidance.",
+      status: "published"
+    },
+    {
+      title: "UK Visa",
+      aliases: ["UK Visa"],
+      country: "United Kingdom",
+      processingTimeLabel: "5 - 15 working days",
+      applicationFee: 2000,
+      description: "Application support for UK visa submissions and required document guidance.",
+      status: "published"
+    },
+    {
+      title: "Schengen Visa",
+      aliases: ["Schengen Visa"],
+      country: "Europe",
+      processingTimeLabel: "5 - 15 working days",
+      applicationFee: 2500,
+      description: "Schengen visa support for travelers applying for eligible European destinations.",
       status: "published"
     }
   ];
 
   for (const item of visas) {
+    let existing = null;
+
+    for (const alias of item.aliases) {
+      const rows = await query(`SELECT id FROM visa_offerings WHERE title = :title LIMIT 1`, { title: alias });
+      if (rows[0]) {
+        existing = rows[0];
+        break;
+      }
+    }
+
+    if (!existing) {
+      const countryMatch = await query(`SELECT id FROM visa_offerings WHERE country = :country LIMIT 1`, {
+        country: item.country
+      });
+      existing = countryMatch[0] || null;
+    }
+
+    if (existing) {
+      await query(
+        `
+          UPDATE visa_offerings
+          SET title = :title,
+              slug = :slug,
+              country = :country,
+              processing_time_label = :processingTimeLabel,
+              application_fee = :applicationFee,
+              description = :description,
+              status = :status,
+              updated_at = NOW()
+          WHERE id = :id
+        `,
+        {
+          ...item,
+          id: existing.id,
+          slug: slugify(item.title)
+        }
+      );
+      continue;
+    }
+
     await query(
       `
         INSERT INTO visa_offerings (title, slug, country, processing_time_label, application_fee, description, status)
         VALUES (:title, :slug, :country, :processingTimeLabel, :applicationFee, :description, :status)
-        ON DUPLICATE KEY UPDATE
-          country = VALUES(country),
-          processing_time_label = VALUES(processing_time_label),
-          application_fee = VALUES(application_fee),
-          description = VALUES(description),
-          status = VALUES(status)
       `,
       {
         ...item,

@@ -60,6 +60,253 @@ export const homeServices = [
   }
 ];
 
+export const servicesPageContent = {
+  heroTitle: "Our Services",
+  introTitle: "Travel support designed around the way you actually move.",
+  introCopy:
+    "NBGS Travel offers personalized domestic and international travel support for leisure, group, and business travelers. From the first idea to the final travel documents, we help structure the journey clearly and professionally.",
+  introActions: [
+    { label: "Contact Us", href: "/contact", variant: "accent" },
+    { label: "Visa Services", href: "/visa", variant: "secondary" }
+  ],
+  services: [
+    {
+      title: "Tailored International & Domestic Packages",
+      description:
+        "We design personalized travel packages that include tours, activities, and experiences for solo travelers, couples, families, and groups."
+    },
+    {
+      title: "Flight Booking",
+      description:
+        "We facilitate flight bookings and assist with important travel information such as flight schedules through Galileo and general flight status support."
+    },
+    {
+      title: "Accommodation",
+      description:
+        "From luxury resorts to boutique hotels and business-friendly lodgings, we secure the right stay to match your preferences and travel goals."
+    },
+    {
+      title: "Transfers",
+      description:
+        "We arrange reliable airport and local transfers including shuttle services, private taxis, and group transport options."
+    },
+    {
+      title: "Car Rental",
+      description:
+        "Car rental reservations are available for both leisure and corporate clients who need added flexibility during their trip."
+    },
+    {
+      title: "Train",
+      description:
+        "We assist with online train ticket reservations, including schedule guidance and ticket fee information."
+    },
+    {
+      title: "Cruises",
+      description:
+        "Explore cruise deals through our trusted partners, from short getaways to premium voyages at competitive rates."
+    },
+    {
+      title: "Activities & Excursions",
+      description:
+        "We can arrange a wide variety of activities including half-day, full-day, over-day, overnight, and multi-day tours."
+    },
+    {
+      title: "Customized Tours",
+      description:
+        "You can create a programmed tour built around your own preferences or choose from one of our itinerary-based travel packages."
+    },
+    {
+      title: "Vacation Packages",
+      description:
+        "Choose from travel deals for families, honeymooners, adventure and wildlife experiences, cultural vacations, and more."
+    },
+    {
+      title: "Corporate Travel Management",
+      description:
+        "Our corporate travel solutions support efficient and cost-effective planning for businesses, including group bookings, incentive travel, and event support."
+    },
+    {
+      title: "Group Travel",
+      description:
+        "We organize group travel for schools, religious groups, sports teams, company retreats, and special-interest tours with full coordination support."
+    },
+    {
+      title: "Travel Insurance",
+      description:
+        "A variety of competitively priced travel insurance options are available to help protect your trip."
+    },
+    {
+      title: "Travel Documentation",
+      description:
+        "We help ensure quick and secure generation of essential travel documents including itineraries, e-tickets, confirmations, and visa support documents."
+    },
+    {
+      title: "Visa Services",
+      description:
+        "We assist with visa applications for different destinations by guiding requirements, compiling documents, and managing submissions for a smoother process."
+    }
+  ]
+};
+
+export const visaPageContent = {
+  heroTitle: "Visa Services",
+  introTitle: "Apply for your visa quickly and securely.",
+  introCopy:
+    "Simply select your destination, complete the form, and make payment. NBGS Travel will handle the next steps with a structured and reliable visa support process.",
+  paymentNote: "Fast, reliable visa processing made easy.",
+  visas: [
+    {
+      title: "UAE Tourist Visa",
+      apiAliases: ["UAE Tourist Visa", "Dubai Visa"],
+      country: "United Arab Emirates",
+      countryCode: "ae",
+      feeNote: "Service Fee and Visa fee",
+      processingTimeLabel: "24 - 72 Hours",
+      applicationFee: 2500,
+      currencyCode: "ZAR",
+      description: "Tourist visa support with guided application handling for UAE travel."
+    },
+    {
+      title: "Turkey E-Visa",
+      apiAliases: ["Turkey E-Visa", "Turkey Visa"],
+      country: "Turkey",
+      countryCode: "tr",
+      feeNote: "Service Fee and Visa fee",
+      processingTimeLabel: "24 Hours",
+      applicationFee: 500,
+      currencyCode: "ZAR",
+      description: "Fast visa support for Turkey travel with a streamlined online application flow."
+    },
+    {
+      title: "Indonesian Visa",
+      apiAliases: ["Indonesian Visa"],
+      country: "Indonesia",
+      countryCode: "id",
+      feeNote: "Service Fee and Visa fee",
+      processingTimeLabel: "24 Hours",
+      applicationFee: 1000,
+      currencyCode: "ZAR",
+      description: "Structured visa application support for Indonesia-bound travel."
+    },
+    {
+      title: "Kenyan Visa",
+      apiAliases: ["Kenyan Visa"],
+      country: "Kenya",
+      countryCode: "ke",
+      feeNote: "Service Fee and Visa fee",
+      processingTimeLabel: "24 Hours",
+      applicationFee: 500,
+      currencyCode: "ZAR",
+      description: "Visa support for Kenya travel with quick application guidance."
+    },
+    {
+      title: "UK Visa",
+      apiAliases: ["UK Visa"],
+      country: "United Kingdom",
+      countryCode: "gb",
+      feeNote: "Service Fee (Visa fee not Included)",
+      processingTimeLabel: "5 - 15 working days",
+      applicationFee: 2000,
+      currencyCode: "ZAR",
+      description: "Application support for UK visa submissions and required document guidance."
+    },
+    {
+      title: "Schengen Visa",
+      apiAliases: ["Schengen Visa"],
+      country: "Europe",
+      imageUrl: "https://nbgstravel.co.za/wp-content/uploads/2025/08/Flag_of_Europe.svg.png",
+      feeNote: "Service Fee (Visa fee not Included)",
+      processingTimeLabel: "5 - 15 working days",
+      applicationFee: 2500,
+      currencyCode: "ZAR",
+      description: "Schengen visa support for travelers applying for eligible European destinations."
+    }
+  ],
+  terms: [
+    {
+      title: "Service Overview",
+      points: [
+        "NBGS Travel assists with visa preparation, submission, and processing support.",
+        "Visa approval remains subject to the relevant embassy or consulate."
+      ]
+    },
+    {
+      title: "Service Fees",
+      points: [
+        "Administrative and handling charges are payable in advance unless otherwise agreed.",
+        "Visa fees, courier fees, and embassy charges remain the client's responsibility where excluded.",
+        "Fees become non-refundable once an application has been submitted."
+      ]
+    },
+    {
+      title: "Client Responsibilities",
+      points: [
+        "Clients must submit complete and accurate information with all required supporting documents.",
+        "Passports must have the required validity and at least three blank pages where applicable.",
+        "Delays caused by incomplete or incorrect information are not the responsibility of NBGS Travel."
+      ]
+    },
+    {
+      title: "Processing, Changes & Liability",
+      points: [
+        "Processing times are estimates and may vary based on embassy, consulate, or third-party delays.",
+        "Visa outcomes remain at the sole discretion of the issuing authority.",
+        "Changes after submission may result in extra costs, and NBGS Travel is not liable for resulting travel losses."
+      ]
+    }
+  ]
+};
+
+export const contactPageContent = {
+  heroTitle: "Contact Us",
+  introTitle: "Let’s talk about your next trip.",
+  introCopy: "Contact us today to schedule a consultation or to learn more about our services.",
+  sectionTitle: "Locate and visit us or send us a message for your next project.",
+  email: "info@nbgstravel.co.za",
+  phoneNumbers: ["+27645033461", "+27798377302"],
+  address: "8 Incubation Drive Riverside View, Fourways, Midrand, 2021",
+  mapEmbedUrl:
+    "https://maps.google.com/maps?q=8%20Incubation%20Drive%20Riverside%20View%2C%20Fourways%2C%20Midrand%2C%202021&t=m&z=8&output=embed&iwloc=near",
+  socials: [
+    {
+      label: "Facebook",
+      href: "https://www.facebook.com/nbgstravel/"
+    },
+    {
+      label: "Instagram",
+      href: "https://www.instagram.com/nbgs_travelza/"
+    },
+    {
+      label: "WhatsApp",
+      href: "https://api.whatsapp.com/send/?phone=27798377302"
+    }
+  ]
+};
+
+export const aboutContent = {
+  heroTitle: "About Us",
+  sectionKicker: "Who We Are",
+  heading: "Travel planning that feels personal, polished, and fully taken care of.",
+  paragraphs: [
+    "At NBGS Travel, we believe that travel is more than just reaching a destination. It is about creating unforgettable experiences.",
+    "As a proudly 100% Black female-owned agency based in Midrand, South Africa, we are passionate about curating seamless, personalized travel solutions for both leisure and corporate clients.",
+    "With years of industry experience, we offer a full spectrum of travel services including flight bookings, hotel accommodations, cruises, rail journeys, and ground transportation, both locally and internationally.",
+    "Whether you are planning a relaxing holiday, a business trip, or a group getaway, our dedicated team is here to take care of every detail.",
+    "We are proud to be accredited by ASATA, the Association of Southern African Travel Agents, which reflects our commitment to ethical practices, service excellence, and industry professionalism.",
+    "What sets us apart is our passion for travel, our reliability, and our attention to detail. At NBGS Travel, we do not just plan trips, we craft journeys that inspire, connect, and elevate."
+  ],
+  highlightTitle: "NBGS At A Glance",
+  highlights: [
+    "100% Black female-owned travel agency",
+    "Based in Midrand, South Africa",
+    "Leisure and corporate travel support",
+    "Flights, hotels, cruises, rail, and ground transport",
+    "Local and international travel planning",
+    "ASATA accredited"
+  ],
+  closingLine: "Let us bring your next adventure to life."
+};
+
 export const manualReviews = [
   {
     id: 1,
