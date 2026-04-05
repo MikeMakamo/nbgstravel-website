@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+.env
+.env.*
+!.env.example
+apps/web/.vite
+apps/admin/.vite
+apps/api/uploads
+*.log
