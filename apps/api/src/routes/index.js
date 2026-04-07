@@ -8,6 +8,7 @@ import { abandonedLeadRouter } from "./abandonedLeads.js";
 import { reviewRouter } from "./reviews.js";
 import { paymentRouter } from "./payments.js";
 import { dashboardRouter } from "./dashboard.js";
+import { mediaRouter } from "./media.js";
 
 export const apiRouter = Router();
 
@@ -20,3 +21,4 @@ apiRouter.use("/abandoned-leads", abandonedLeadRouter);
 apiRouter.use("/reviews", reviewRouter);
 apiRouter.use("/payments", paymentRouter);
 apiRouter.use("/dashboard", dashboardRouter);
+apiRouter.use("/media", mediaRouter);

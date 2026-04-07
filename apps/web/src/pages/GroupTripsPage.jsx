@@ -37,6 +37,10 @@ function getNightsLabel(durationLabel) {
 }
 
 function formatTravelWindow(pkg) {
+  if (pkg?.adminMeta?.travelDateLabel) {
+    return pkg.adminMeta.travelDateLabel;
+  }
+
   if (pkg.fixed_travel_start_date && pkg.fixed_travel_end_date) {
     const start = new Date(pkg.fixed_travel_start_date);
     const end = new Date(pkg.fixed_travel_end_date);

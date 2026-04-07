@@ -46,6 +46,10 @@ function getNightsLabel(durationLabel) {
 }
 
 function getTravelDateLabel(pkg) {
+  if (pkg?.adminMeta?.travelDateLabel) {
+    return pkg.adminMeta.travelDateLabel;
+  }
+
   if (!pkg.has_fixed_travel_dates) {
     return "Own travel date";
   }

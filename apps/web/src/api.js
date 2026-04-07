@@ -10,11 +10,19 @@ async function parseResponse(response) {
 }
 
 export async function getPackages() {
-  return parseResponse(await fetch(`${API_URL}/packages`));
+  const data = await parseResponse(await fetch(`${API_URL}/packages`));
+  return {
+    ...data,
+    packages: (data.packages || []).map(normalizePackage)
+  };
 }
 
 export async function getPackage(slug) {
-  return parseResponse(await fetch(`${API_URL}/packages/${slug}`));
+  const data = await parseResponse(await fetch(`${API_URL}/packages/${slug}`));
+  return {
+    ...data,
+    package: normalizePackage(data.package)
+  };
 }
 
 export async function getVisas() {
@@ -73,4 +81,25 @@ export async function submitAbandonedLead(payload) {
       body: JSON.stringify(payload)
     })
   );
+}
+
+function normalizePackage(pkg) {
+  if (!pkg) {
+    return pkg;
+  }
+
+  let adminMeta = pkg.adminMeta || {};
+
+  if (pkg.admin_meta_json) {
+    try {
+      adminMeta = typeof pkg.admin_meta_json === "string" ? JSON.parse(pkg.admin_meta_json) : pkg.admin_meta_json;
+    } catch (error) {
+      adminMeta = {};
+    }
+  }
+
+  return {
+    ...pkg,
+    adminMeta: adminMeta || {}
+  };
 }

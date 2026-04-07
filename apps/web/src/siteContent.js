@@ -470,6 +470,7 @@ export const categoryCards = [
 
 export function getPackageVisual(pkg) {
   if (!pkg) return liveMedia.packagesHero;
+  if (pkg.adminMeta?.backgroundListingImage) return pkg.adminMeta.backgroundListingImage;
   if (pkg.slug === "visit-zanzibar-2026") return liveMedia.zanzibarHero;
   if ((pkg.package_category || "").toLowerCase().includes("group")) return liveMedia.packagesHero;
   return liveMedia.homeHero;

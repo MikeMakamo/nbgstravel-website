@@ -5,6 +5,25 @@ import { query } from "../db/pool.js";
 import { createHttpError } from "../utils/errors.js";
 import { slugify } from "@nbgstravel/shared";
 
+const packageAdminMetaSchema = z
+  .object({
+    travelDateLabel: z.string().optional().nullable(),
+    bio: z.string().optional().nullable(),
+    backgroundListingImage: z.string().optional().nullable(),
+    describeTrip: z.string().optional().nullable(),
+    tripPolicy: z.string().optional().nullable(),
+    gallery: z.array(z.string()).optional(),
+    youtubeUrl: z.string().optional().nullable(),
+    nights: z.coerce.number().int().nonnegative().optional().nullable(),
+    dateOfTrip: z.string().optional().nullable(),
+    isLocalTrip: z.coerce.boolean().optional().default(false),
+    mainTripType: z.string().optional().nullable(),
+    includes: z.array(z.string()).optional(),
+    excludes: z.array(z.string()).optional()
+  })
+  .optional()
+  .nullable();
+
 const packageSchema = z.object({
   title: z.string().min(3),
   packageCategory: z.string().min(2),
@@ -22,7 +41,8 @@ const packageSchema = z.object({
   fixedTravelEndDate: z.string().optional().nullable(),
   shortDescription: z.string().optional().nullable(),
   fullDescription: z.string().optional().nullable(),
-  status: z.enum(["draft", "published", "archived"]).default("draft")
+  status: z.enum(["draft", "published", "archived"]).default("draft"),
+  adminMeta: packageAdminMetaSchema
 });
 
 export const packageRouter = Router();
@@ -32,7 +52,7 @@ packageRouter.get("/admin/list/all", requireAuth, async (req, res, next) => {
     const rows = await query(
       `
         SELECT id, title, slug, package_category, destination, country, continent, trip_type, duration_label,
-               base_price, pricing_model, status, created_at, updated_at
+               base_price, pricing_model, status, admin_meta_json, created_at, updated_at
         FROM packages
         ORDER BY updated_at DESC
       `
@@ -50,7 +70,7 @@ packageRouter.get("/", async (req, res, next) => {
       `
         SELECT id, title, slug, package_category, destination, country, continent, trip_type, duration_label, base_price, currency_code,
                pricing_model, quoted_from_label, deposit_amount, has_fixed_travel_dates, fixed_travel_start_date, fixed_travel_end_date,
-               short_description, full_description, status, created_at, updated_at
+               short_description, full_description, admin_meta_json, status, created_at, updated_at
         FROM packages
         WHERE status = 'published'
         ORDER BY sort_order ASC, created_at DESC
@@ -132,13 +152,13 @@ packageRouter.post("/", requireAuth, requireRole("super_admin", "admin"), async 
           title, slug, package_category, destination, country, continent, trip_type, duration_label,
           base_price, pricing_model, quoted_from_label, deposit_amount, has_fixed_travel_dates,
           fixed_travel_start_date, fixed_travel_end_date, short_description, full_description, status,
-          created_by_admin_id, updated_by_admin_id
+          created_by_admin_id, updated_by_admin_id, admin_meta_json
         )
         VALUES (
           :title, :slug, :packageCategory, :destination, :country, :continent, :tripType, :durationLabel,
           :basePrice, :pricingModel, :quotedFromLabel, :depositAmount, :hasFixedTravelDates,
           :fixedTravelStartDate, :fixedTravelEndDate, :shortDescription, :fullDescription, :status,
-          :adminId, :adminId
+          :adminId, :adminId, :adminMetaJson
         )
       `,
       {
@@ -155,9 +175,12 @@ packageRouter.post("/", requireAuth, requireRole("super_admin", "admin"), async 
         quotedFromLabel: data.quotedFromLabel || null,
         depositAmount: data.depositAmount ?? null,
         shortDescription: data.shortDescription || null,
-        fullDescription: data.fullDescription || null
+        fullDescription: data.fullDescription || null,
+        adminMetaJson: JSON.stringify(sanitizeAdminMeta(data.adminMeta))
       }
     );
+
+    await syncPackageMetaLists(result.insertId, data.adminMeta);
 
     res.status(201).json({ id: result.insertId, slug });
   } catch (error) {
@@ -193,6 +216,7 @@ packageRouter.put("/:id", requireAuth, requireRole("super_admin", "admin"), asyn
           full_description = :fullDescription,
           status = :status,
           updated_by_admin_id = :adminId,
+          admin_meta_json = :adminMetaJson,
           updated_at = NOW()
         WHERE id = :id
       `,
@@ -211,12 +235,87 @@ packageRouter.put("/:id", requireAuth, requireRole("super_admin", "admin"), asyn
         quotedFromLabel: data.quotedFromLabel || null,
         depositAmount: data.depositAmount ?? null,
         shortDescription: data.shortDescription || null,
-        fullDescription: data.fullDescription || null
+        fullDescription: data.fullDescription || null,
+        adminMetaJson: JSON.stringify(sanitizeAdminMeta(data.adminMeta))
       }
     );
+
+    await syncPackageMetaLists(req.params.id, data.adminMeta);
 
     res.json({ success: true, slug });
   } catch (error) {
     next(error);
   }
 });
+
+packageRouter.delete("/:id", requireAuth, requireRole("super_admin", "admin"), async (req, res, next) => {
+  try {
+    const bookingRows = await query(`SELECT COUNT(*) AS count FROM bookings WHERE package_id = :id`, {
+      id: req.params.id
+    });
+
+    if (Number(bookingRows[0]?.count || 0) > 0) {
+      throw createHttpError(400, "This package already has bookings and cannot be deleted. Archive it instead.");
+    }
+
+    await query(`DELETE FROM package_pricing_rules WHERE package_id = :id`, { id: req.params.id });
+    await query(`DELETE FROM package_inclusions WHERE package_id = :id`, { id: req.params.id });
+    await query(`DELETE FROM package_exclusions WHERE package_id = :id`, { id: req.params.id });
+    await query(`DELETE FROM package_payment_plan_items WHERE package_id = :id`, { id: req.params.id });
+    await query(`DELETE FROM package_media WHERE package_id = :id`, { id: req.params.id });
+    await query(`DELETE FROM packages WHERE id = :id`, { id: req.params.id });
+
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+function sanitizeAdminMeta(adminMeta) {
+  const safeMeta = adminMeta || {};
+
+  return {
+    travelDateLabel: safeMeta.travelDateLabel || null,
+    bio: safeMeta.bio || null,
+    backgroundListingImage: safeMeta.backgroundListingImage || null,
+    describeTrip: safeMeta.describeTrip || null,
+    tripPolicy: safeMeta.tripPolicy || null,
+    gallery: Array.isArray(safeMeta.gallery) ? safeMeta.gallery.filter(Boolean) : [],
+    youtubeUrl: safeMeta.youtubeUrl || null,
+    nights: safeMeta.nights ?? null,
+    dateOfTrip: safeMeta.dateOfTrip || null,
+    isLocalTrip: Boolean(safeMeta.isLocalTrip),
+    mainTripType: safeMeta.mainTripType || null,
+    includes: Array.isArray(safeMeta.includes) ? safeMeta.includes.filter(Boolean) : [],
+    excludes: Array.isArray(safeMeta.excludes) ? safeMeta.excludes.filter(Boolean) : []
+  };
+}
+
+async function syncPackageMetaLists(packageId, adminMeta) {
+  const safeMeta = sanitizeAdminMeta(adminMeta);
+
+  await query(`DELETE FROM package_inclusions WHERE package_id = :packageId`, { packageId });
+  await query(`DELETE FROM package_exclusions WHERE package_id = :packageId`, { packageId });
+
+  for (const [index, itemText] of safeMeta.includes.entries()) {
+    await query(
+      `INSERT INTO package_inclusions (package_id, item_text, sort_order) VALUES (:packageId, :itemText, :sortOrder)`,
+      {
+        packageId,
+        itemText,
+        sortOrder: index
+      }
+    );
+  }
+
+  for (const [index, itemText] of safeMeta.excludes.entries()) {
+    await query(
+      `INSERT INTO package_exclusions (package_id, item_text, sort_order) VALUES (:packageId, :itemText, :sortOrder)`,
+      {
+        packageId,
+        itemText,
+        sortOrder: index
+      }
+    );
+  }
+}

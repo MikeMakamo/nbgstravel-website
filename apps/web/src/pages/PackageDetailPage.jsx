@@ -33,6 +33,10 @@ function getPricingModelLabel(pricingModel) {
 }
 
 function getTravelDateLabel(pkg) {
+  if (pkg?.adminMeta?.travelDateLabel) {
+    return pkg.adminMeta.travelDateLabel;
+  }
+
   if (!pkg?.has_fixed_travel_dates) {
     return "Own travel date";
   }
@@ -75,6 +79,13 @@ function normalizeMediaUrl(mediaItem) {
   const value = mediaItem?.file_url || mediaItem?.file_path;
   if (!value) return null;
   return value;
+}
+
+function splitTextList(value) {
+  return String(value || "")
+    .split("\n")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 export function PackageDetailPage() {
@@ -127,7 +138,20 @@ export function PackageDetailPage() {
       return mediaItems;
     }
 
+    const adminGallery = Array.isArray(pkg?.adminMeta?.gallery) ? pkg.adminMeta.gallery.filter(Boolean).slice(0, 6) : [];
+
+    if (adminGallery.length) {
+      return adminGallery;
+    }
+
     return liveMedia.previousTrips.slice(0, 6);
+  }, [pkg]);
+
+  const tripStory = pkg?.adminMeta?.describeTrip || pkg?.full_description || pkg?.short_description || "Curated NBGS travel experience.";
+  const summaryCopy = pkg?.adminMeta?.bio || pkg?.short_description || pkg?.full_description || "Curated NBGS travel experience.";
+  const tripPolicyItems = useMemo(() => {
+    const items = splitTextList(pkg?.adminMeta?.tripPolicy);
+    return items.length ? items : fallbackTripPolicy;
   }, [pkg]);
 
   const similarTrips = useMemo(() => {
@@ -162,7 +186,7 @@ export function PackageDetailPage() {
           <div className="package-detail-summary">
             <span className="package-meta">{getCategoryLabel(pkg.package_category)}</span>
             <h1>{pkg.title}</h1>
-            <p className="package-detail-summary-copy">{pkg.full_description || pkg.short_description || "Curated NBGS travel experience."}</p>
+            <p className="package-detail-summary-copy">{summaryCopy}</p>
 
             <div className="package-detail-stat-grid">
               <div className="package-detail-stat-card">
@@ -220,7 +244,7 @@ export function PackageDetailPage() {
             <article className="package-story-card">
               <span className="package-meta">About This Trip</span>
               <h2>{pkg.destination ? `${pkg.destination} travel experience` : pkg.title}</h2>
-              <p>{pkg.full_description || pkg.short_description || "NBGS Travel will guide you through availability, package details, and booking support for this trip."}</p>
+              <p>{tripStory}</p>
             </article>
 
             <div className="inclusion-exclusion-grid package-detail-panels">
@@ -247,7 +271,7 @@ export function PackageDetailPage() {
             <article className="package-side-card">
               <h3>Trip Policy</h3>
               <ul className="text-bullets">
-                {fallbackTripPolicy.map((item) => (
+                {tripPolicyItems.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>

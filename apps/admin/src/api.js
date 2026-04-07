@@ -64,6 +64,25 @@ export async function createPackage(token, payload) {
   );
 }
 
+export async function updatePackage(token, id, payload) {
+  return parseResponse(
+    await fetch(`${API_URL}/packages/${id}`, {
+      method: "PUT",
+      headers: getHeaders(token),
+      body: JSON.stringify(payload)
+    })
+  );
+}
+
+export async function deletePackage(token, id) {
+  return parseResponse(
+    await fetch(`${API_URL}/packages/${id}`, {
+      method: "DELETE",
+      headers: getHeaders(token)
+    })
+  );
+}
+
 export async function createVisa(token, payload) {
   return parseResponse(
     await fetch(`${API_URL}/visas`, {
@@ -72,4 +91,41 @@ export async function createVisa(token, payload) {
       body: JSON.stringify(payload)
     })
   );
+}
+
+export async function updateBookingStatus(token, id, status) {
+  return parseResponse(
+    await fetch(`${API_URL}/bookings/${id}/status`, {
+      method: "PATCH",
+      headers: getHeaders(token),
+      body: JSON.stringify({ status })
+    })
+  );
+}
+
+export async function uploadMedia(token, file, altText = "") {
+  const dataUrl = await readFileAsDataUrl(file);
+
+  return parseResponse(
+    await fetch(`${API_URL}/media/upload`, {
+      method: "POST",
+      headers: getHeaders(token),
+      body: JSON.stringify({
+        fileName: file.name,
+        mimeType: file.type,
+        dataUrl,
+        altText
+      })
+    })
+  );
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Unable to read image file"));
+    reader.readAsDataURL(file);
+  });
 }

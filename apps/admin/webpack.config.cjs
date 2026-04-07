@@ -29,6 +29,13 @@ module.exports = {
       {
         test: /\.css$/,
         use: ["style-loader", { loader: "css-loader", options: { url: false } }]
+      },
+      {
+        test: /\.(png|jpe?g|gif|webp|svg)$/i,
+        type: "asset/resource",
+        generator: {
+          filename: "assets/images/[name][ext]"
+        }
       }
     ]
   },
