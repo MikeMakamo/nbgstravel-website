@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { query } from "./pool.js";
-import { slugify } from "@nbgstravel/shared";
+import { slugify } from "../utils/string.js";
 
 async function upsertRole(name, description) {
   await query(

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { query } from "../db/pool.js";
-import { slugify } from "@nbgstravel/shared";
+import { slugify } from "../utils/string.js";
 import { sendTransactionalEmail, bookingEmailMarkup } from "../services/emailService.js";
 
 const visaSchema = z.object({

@@ -67,7 +67,7 @@ This folder is the prepared deployment package for a cPanel-style client test ru
 
 - \`public_html/\` contains the public website build and the admin build under \`/admin\`
 - \`server-source/\` contains the Node.js API source prepared for cPanel Node.js App
-- \`cpanel-node-app-root/\` contains the standalone API app root you can point cPanel at directly
+- \`cpanel-node-app-root/\` contains the API app root you can point cPanel at directly
 - \`database/migrations/\` contains the schema migration SQL files
 - \`database/test_seed.sql\` contains a client demo seed export
 
@@ -75,7 +75,7 @@ This folder is the prepared deployment package for a cPanel-style client test ru
 
 - Public website document root: normal website \`public_html\`
 - Admin dashboard URL: \`https://your-domain/admin/\`
-- Node.js app root: outside public web root if possible, using \`cpanel-node-app-root/\`
+- Node.js app root: outside public web root if possible, using either \`apps/api\` from the full project upload or \`cpanel-node-app-root/\`
 - Node.js startup file: \`src/server.js\`
 
 ## API URL Assumption In This Prepared Build
@@ -119,7 +119,10 @@ The included \`.htaccess\` files already handle SPA routing for:
 
 ## Backend Upload
 
-Upload \`cpanel-node-app-root\` to the Node.js app root on cPanel.
+Upload either:
+
+- \`cpanel-node-app-root\` to the Node.js app root on cPanel, or
+- the normal \`apps/api\` folder if you are uploading the whole project tree
 
 Expected startup flow:
 
@@ -256,15 +259,6 @@ try {
   await fs.rm(path.resolve(serverSourceDir, "apps/api/.env"), { force: true });
   await fs.rm(path.resolve(serverSourceDir, "apps/api/uploads"), { recursive: true, force: true });
   await fs.mkdir(path.resolve(serverSourceDir, "apps/api/uploads/media"), { recursive: true });
-  await copyRecursive(path.resolve(rootDir, "packages/shared"), path.resolve(serverSourceDir, "apps/api/vendor/shared"));
-
-  const apiPackagePath = path.resolve(serverSourceDir, "apps/api/package.json");
-  const apiPackage = JSON.parse(await fs.readFile(apiPackagePath, "utf8"));
-  apiPackage.dependencies = {
-    ...apiPackage.dependencies,
-    "@nbgstravel/shared": "file:./vendor/shared"
-  };
-  await fs.writeFile(apiPackagePath, `${JSON.stringify(apiPackage, null, 2)}\n`, "utf8");
 
   await copyRecursive(path.resolve(serverSourceDir, "apps/api"), cpanelAppRootDir);
 
