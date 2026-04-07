@@ -13,7 +13,9 @@
     "build": "npm run build --workspace packages/shared && npm run build --workspace apps/api && npm run build --workspace apps/web && npm run build --workspace apps/admin",
     "lint": "npm run lint --workspace apps/api && npm run lint --workspace apps/web && npm run lint --workspace apps/admin",
     "migrate": "npm run migrate --workspace apps/api",
-    "seed": "npm run seed --workspace apps/api"
+    "seed": "npm run seed --workspace apps/api",
+    "export:test-seed": "node scripts/export-test-seed-sql.mjs",
+    "prepare:test-run": "node scripts/prepare-test-run-deploy.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

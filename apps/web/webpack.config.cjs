@@ -3,14 +3,28 @@ const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 
+function normalizePublicPath(value) {
+  if (!value || value === "/") {
+    return "/";
+  }
+
+  const withLeadingSlash = value.startsWith("/") ? value : `/${value}`;
+  return withLeadingSlash.endsWith("/") ? withLeadingSlash : `${withLeadingSlash}/`;
+}
+
+const publicPath = normalizePublicPath(process.env.VITE_PUBLIC_PATH || "/");
+const outputPath = process.env.BUILD_OUTPUT_DIR
+  ? path.resolve(process.env.BUILD_OUTPUT_DIR)
+  : path.resolve(__dirname, "dist");
+
 module.exports = {
   mode: process.env.NODE_ENV || "development",
   entry: path.resolve(__dirname, "src/main.jsx"),
   output: {
-    path: path.resolve(__dirname, "dist"),
+    path: outputPath,
     filename: "assets/[name].[contenthash].js",
     clean: true,
-    publicPath: "/"
+    publicPath
   },
   resolve: {
     extensions: [".js", ".jsx"]
@@ -41,7 +55,8 @@ module.exports = {
       patterns: [{ from: path.resolve(__dirname, "public"), to: path.resolve(__dirname, "dist") }]
     }),
     new webpack.DefinePlugin({
-      "process.env.VITE_API_URL": JSON.stringify(process.env.VITE_API_URL || "http://localhost:4000/api")
+      "process.env.VITE_API_URL": JSON.stringify(process.env.VITE_API_URL || "http://localhost:4000/api"),
+      "process.env.VITE_PUBLIC_PATH": JSON.stringify(publicPath)
     })
   ],
   devServer: {
