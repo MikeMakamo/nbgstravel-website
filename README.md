@@ -86,6 +86,24 @@ npm run seed
 npm run dev
 ```
 
+## Deployment
+
+Use the real deployment guide in [DEPLOYMENT.md](C:\Users\thand\OneDrive\Desktop\Projects\nbgstravel website\DEPLOYMENT.md).
+
+Short version:
+
+- build the public site and admin locally with `npm run build:deploy`
+- upload `apps/web/dist` to the main web root
+- upload `apps/admin/dist` to `/admin`
+- run only `apps/api` as the Node.js app on the server
+- inside the API app root run:
+
+```bash
+npm install --omit=dev
+npm run migrate
+npm run seed
+```
+
 ## Default Seeded Admin Login
 
 - Email: `admin@nbgstravel.local`
@@ -99,6 +117,7 @@ Change this as soon as the real environment is available.
 - Visa applications create a `PayFast` payment intent after the form submission succeeds.
 - Abandoned leads are only pushed to the backend once a phone number has been captured.
 - Google reviews are designed to sync automatically through the backend scheduler and store locally in MySQL.
+- `npm run seed` is production-safe by default and only bootstraps roles, admin access, and terms documents unless `SEED_DEMO_CONTENT=true` is set.
 
 ## Verification
 

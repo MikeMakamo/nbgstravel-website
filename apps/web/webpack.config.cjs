@@ -52,7 +52,13 @@ module.exports = {
       template: path.resolve(__dirname, "index.html")
     }),
     new CopyWebpackPlugin({
-      patterns: [{ from: path.resolve(__dirname, "public"), to: path.resolve(__dirname, "dist") }]
+      patterns: [
+        {
+          from: path.resolve(__dirname, "public"),
+          to: outputPath,
+          globOptions: { dot: true }
+        }
+      ]
     }),
     new webpack.DefinePlugin({
       "process.env.VITE_API_URL": JSON.stringify(process.env.VITE_API_URL || "http://localhost:4000/api"),

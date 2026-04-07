@@ -2,6 +2,10 @@ import bcrypt from "bcryptjs";
 import { query } from "./pool.js";
 import { slugify } from "../utils/string.js";
 
+function isEnabled(value = "") {
+  return ["1", "true", "yes", "on"].includes(String(value).trim().toLowerCase());
+}
+
 async function upsertRole(name, description) {
   await query(
     `
@@ -355,8 +359,11 @@ async function run() {
   await upsertRole("admin", "Client-facing operations and content management");
   await seedAdmin();
   await seedTerms();
-  await seedPackages();
-  await seedVisas();
+
+  if (isEnabled(process.env.SEED_DEMO_CONTENT)) {
+    await seedPackages();
+    await seedVisas();
+  }
 }
 
 run()

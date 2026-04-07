@@ -8,4 +8,3 @@ apps/web/.vite
 apps/admin/.vite
 apps/api/uploads
 *.log
-deployment/
