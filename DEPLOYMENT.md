@@ -29,12 +29,28 @@ set DEPLOY_API_URL=https://api.your-domain/api
 npm run build:deploy
 ```
 
+If the admin is deployed on its own subdomain, build it at the root path:
+
+```bash
+set DEPLOY_API_URL=https://api.your-domain/api
+set DEPLOY_ADMIN_PUBLIC_PATH=/
+npm run build:deploy
+```
+
+If the main website is also deployed under a subpath, you can override that too:
+
+```bash
+set DEPLOY_WEB_PUBLIC_PATH=/some-subpath/
+```
+
 ## 2. Upload Static Files
 
 Upload:
 
 - contents of `apps/web/dist` to your main web root
 - contents of `apps/admin/dist` to `/admin`
+
+If the admin is on `admin.your-domain`, upload `apps/admin/dist` to that subdomain root instead.
 
 Both builds include the required `.htaccess` files for SPA routing.
 
@@ -120,3 +136,9 @@ Expected layout:
 - `https://your-domain/` public site
 - `https://your-domain/admin/` admin site
 - `https://your-domain/api/*` API
+
+Alternative supported layout:
+
+- `https://your-domain/` public site
+- `https://admin.your-domain/` admin site
+- `https://api.your-domain/` API
