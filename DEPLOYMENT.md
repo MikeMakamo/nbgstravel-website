@@ -61,7 +61,7 @@ Use `apps/api` as the cPanel Node.js app root.
 Startup file:
 
 ```text
-src/server.js
+start.cjs
 ```
 
 Inside the API app root run:
@@ -77,7 +77,6 @@ npm run seed
 Minimum required values:
 
 ```text
-PORT=3000
 APP_URL=https://your-domain
 ADMIN_URL=https://your-domain/admin
 JWT_SECRET=replace-with-a-long-random-secret
@@ -142,3 +141,21 @@ Alternative supported layout:
 - `https://your-domain/` public site
 - `https://admin.your-domain/` admin site
 - `https://api.your-domain/` API
+
+## 7. cPanel Note
+
+For cPanel Node.js apps, set the startup file relative to the app root.
+
+Use:
+
+```text
+start.cjs
+```
+
+Do not use:
+
+- a full filesystem path
+- a duplicated repo path
+- `src/server.js` directly in cPanel Application Manager
+
+The API code is ESM, and `start.cjs` is the CommonJS bootstrap specifically added for cPanel and LiteSpeed loaders.

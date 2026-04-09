@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
+    "start": "node start.cjs",
     "build": "node -e \"console.log('api build complete')\"",
     "lint": "node -e \"console.log('api lint placeholder')\"",
     "migrate": "node src/db/migrate.js",
