@@ -54,6 +54,10 @@ export async function getAbandonedLeads(token) {
   return parseResponse(await fetch(`${API_URL}/abandoned-leads`, { headers: getHeaders(token) }));
 }
 
+export async function getNewsletterData(token) {
+  return parseResponse(await fetch(`${API_URL}/newsletter/admin/bootstrap`, { headers: getHeaders(token) }));
+}
+
 export async function createPackage(token, payload) {
   return parseResponse(
     await fetch(`${API_URL}/packages`, {
@@ -86,6 +90,56 @@ export async function deletePackage(token, id) {
 export async function createVisa(token, payload) {
   return parseResponse(
     await fetch(`${API_URL}/visas`, {
+      method: "POST",
+      headers: getHeaders(token),
+      body: JSON.stringify(payload)
+    })
+  );
+}
+
+export async function createNewsletterList(token, payload) {
+  return parseResponse(
+    await fetch(`${API_URL}/newsletter/lists`, {
+      method: "POST",
+      headers: getHeaders(token),
+      body: JSON.stringify(payload)
+    })
+  );
+}
+
+export async function createNewsletterSubscriber(token, payload) {
+  return parseResponse(
+    await fetch(`${API_URL}/newsletter/subscribers`, {
+      method: "POST",
+      headers: getHeaders(token),
+      body: JSON.stringify(payload)
+    })
+  );
+}
+
+export async function updateNewsletterSubscriber(token, id, payload) {
+  return parseResponse(
+    await fetch(`${API_URL}/newsletter/subscribers/${id}`, {
+      method: "PATCH",
+      headers: getHeaders(token),
+      body: JSON.stringify(payload)
+    })
+  );
+}
+
+export async function updateNewsletterTemplate(token, id, payload) {
+  return parseResponse(
+    await fetch(`${API_URL}/newsletter/templates/${id}`, {
+      method: "PUT",
+      headers: getHeaders(token),
+      body: JSON.stringify(payload)
+    })
+  );
+}
+
+export async function sendNewsletterCampaign(token, payload) {
+  return parseResponse(
+    await fetch(`${API_URL}/newsletter/campaigns/send`, {
       method: "POST",
       headers: getHeaders(token),
       body: JSON.stringify(payload)

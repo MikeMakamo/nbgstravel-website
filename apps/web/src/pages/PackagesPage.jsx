@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getPackages } from "../api.js";
 import { fallbackPackages } from "../data/fallback.js";
 import { getPackageVisual } from "../siteContent.js";
+import { formatLocationHierarchy, getLocationHierarchyParts } from "../utils/location.js";
 
 function formatPrice(amount, currency = "ZAR") {
   return new Intl.NumberFormat("en-ZA", {
@@ -85,7 +86,7 @@ export function PackagesPage() {
     const searchTerm = filters.search.trim().toLowerCase();
 
     return packages.filter((pkg) => {
-      const searchableText = [pkg.title, pkg.destination, pkg.country, pkg.continent, pkg.trip_type]
+      const searchableText = [pkg.title, pkg.destination, pkg.country, pkg.continent, pkg.trip_type, ...getLocationHierarchyParts(pkg)]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -241,10 +242,7 @@ export function PackagesPage() {
                   <div className="listing-card-meta">
                     <div className="listing-meta-row">
                       <span className="listing-meta-label">Location</span>
-                      <span className="listing-meta-value">
-                        {pkg.destination}
-                        {pkg.country ? `, ${pkg.country}` : ""}
-                      </span>
+                      <span className="listing-meta-value">{formatLocationHierarchy(pkg)}</span>
                     </div>
 
                     <div className="listing-meta-row">

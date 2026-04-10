@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { query } from "./pool.js";
 import { slugify } from "../utils/string.js";
@@ -53,6 +54,199 @@ async function seedTerms() {
   );
 }
 
+async function seedNewsletter() {
+  const lists = [
+    {
+      name: "Main Newsletter",
+      slug: "main-newsletter",
+      description: "Primary website newsletter sign-up list.",
+      isDefault: 1
+    },
+    {
+      name: "Packages & Deals",
+      slug: "packages-deals",
+      description: "Travel deals, destination offers, and package highlights.",
+      isDefault: 0
+    },
+    {
+      name: "Visa Updates",
+      slug: "visa-updates",
+      description: "Visa service updates, reminders, and travel document notices.",
+      isDefault: 0
+    }
+  ];
+
+  for (const item of lists) {
+    await query(
+      `
+        INSERT INTO newsletter_lists (name, slug, description, is_default, is_active)
+        VALUES (:name, :slug, :description, :isDefault, 1)
+        ON DUPLICATE KEY UPDATE
+          name = VALUES(name),
+          description = VALUES(description),
+          is_default = VALUES(is_default),
+          is_active = VALUES(is_active)
+      `,
+      item
+    );
+  }
+
+  const templates = [
+    {
+      templateKey: "travel-deals",
+      name: "Travel Deals Spotlight",
+      subject: "Your next NBGS Travel escape starts here",
+      preheader: "Fresh package ideas, curated by the NBGS Travel team.",
+      heading: "Fresh travel inspiration from NBGS Travel",
+      introText: "We’ve rounded up a few travel ideas, destination highlights, and booking inspiration for your next escape.",
+      bodyHtml:
+        "<p>Use this template to spotlight current travel packages, limited-time offers, or destination highlights that deserve more attention this week.</p><p>Swap in your latest package links, mention departures with strong demand, and keep the tone warm, polished, and personal.</p>",
+      ctaLabel: "View packages",
+      ctaUrl: "https://nbgstravel.co.za/packages",
+      footerNote: "You are receiving this because you subscribed to the NBGS Travel newsletter.",
+      heroImageUrl: "https://nbgstravel.co.za/wp-content/uploads/2025/05/ishan-seefromthesky-rj8fMHNPXbg-unsplash-1-scaled.jpg",
+      featureImageUrl: "https://nbgstravel.co.za/wp-content/uploads/2025/02/472998936_18052737236487047_7230927518770349952_n-1024x576.jpg",
+      sortOrder: 1
+    },
+    {
+      templateKey: "group-trip-launch",
+      name: "Group Trip Launch",
+      subject: "A new NBGS group trip is ready for take-off",
+      preheader: "Share your newest curated departure with the right audience.",
+      heading: "A group trip worth joining",
+      introText: "Announce a new group trip with a clear summary, departure window, and strong call to action.",
+      bodyHtml:
+        "<p>This template works well for Afronation departures, hosted experiences, and fixed-date trips that need a dedicated spotlight.</p><p>Explain who the trip is best for, what makes it special, and how quickly spaces may fill.</p>",
+      ctaLabel: "See group trips",
+      ctaUrl: "https://nbgstravel.co.za/group-trips",
+      footerNote: "Questions before booking? Reply to this email and the NBGS Travel team will help.",
+      heroImageUrl: "https://nbgstravel.co.za/wp-content/uploads/2025/07/222782-Zanzibar.jpg.webp",
+      featureImageUrl: "https://nbgstravel.co.za/wp-content/uploads/2025/02/480224362_642660051481760_5361578353347056917_n-e1740481322317.jpg",
+      sortOrder: 2
+    },
+    {
+      templateKey: "visa-update",
+      name: "Visa Update",
+      subject: "Important travel visa update from NBGS Travel",
+      preheader: "Use this for visa reminders, deadline notices, or country-specific updates.",
+      heading: "Travel document and visa updates",
+      introText: "Keep travelers informed about changing visa timelines, requirements, and application support.",
+      bodyHtml:
+        "<p>Use this layout when you need to explain visa processing changes, seasonal delays, required documents, or reminders for upcoming departures.</p><p>Keep the message clear, practical, and easy to scan.</p>",
+      ctaLabel: "View visa services",
+      ctaUrl: "https://nbgstravel.co.za/visa",
+      footerNote: "NBGS Travel visa support is subject to embassy and destination requirements.",
+      heroImageUrl: "https://nbgstravel.co.za/wp-content/uploads/2025/02/480224362_642660051481760_5361578353347056917_n-e1740481322317.jpg",
+      featureImageUrl: "https://nbgstravel.co.za/wp-content/uploads/2025/05/ishan-seefromthesky-rj8fMHNPXbg-unsplash-1-scaled.jpg",
+      sortOrder: 3
+    },
+    {
+      templateKey: "seasonal-getaway",
+      name: "Seasonal Getaway Feature",
+      subject: "Plan your next getaway with NBGS Travel",
+      preheader: "Perfect for holiday periods, long weekends, and seasonal promotions.",
+      heading: "Seasonal getaways worth planning now",
+      introText: "Highlight destination moods, timing, and package ideas that match the season.",
+      bodyHtml:
+        "<p>Use this template for long weekends, festive season, birthday-travel periods, or destination inspiration tied to a time of year.</p><p>Keep the copy aspirational but grounded in what the team can actually book and support.</p>",
+      ctaLabel: "Plan my trip",
+      ctaUrl: "https://nbgstravel.co.za/contact",
+      footerNote: "NBGS Travel will confirm availability and package details directly with each traveler.",
+      heroImageUrl: "https://nbgstravel.co.za/wp-content/uploads/2025/02/472998936_18052737236487047_7230927518770349952_n.jpg",
+      featureImageUrl: "https://nbgstravel.co.za/wp-content/uploads/2025/07/222782-Zanzibar.jpg.webp",
+      sortOrder: 4
+    },
+    {
+      templateKey: "client-story",
+      name: "Client Story & Social Proof",
+      subject: "See how other travelers experienced NBGS Travel",
+      preheader: "Turn client stories and reviews into a polished newsletter update.",
+      heading: "Real travel stories from the NBGS community",
+      introText: "Share a memorable client trip, highlight great feedback, and build trust before the next campaign.",
+      bodyHtml:
+        "<p>This template is ideal when you want to showcase traveler stories, standout birthdays, or a review that reflects the NBGS Travel experience.</p><p>It works especially well between sales pushes because it keeps the audience warm while reinforcing trust.</p>",
+      ctaLabel: "Read more travel stories",
+      ctaUrl: "https://nbgstravel.co.za/about",
+      footerNote: "Thank you for being part of the NBGS Travel community.",
+      heroImageUrl: "https://nbgstravel.co.za/wp-content/uploads/2025/02/472998936_18052737236487047_7230927518770349952_n-1024x576.jpg",
+      featureImageUrl: "https://nbgstravel.co.za/wp-content/uploads/2025/05/ishan-seefromthesky-rj8fMHNPXbg-unsplash-1-scaled.jpg",
+      sortOrder: 5
+    }
+  ];
+
+  for (const item of templates) {
+    await query(
+      `
+        INSERT INTO newsletter_templates (
+          template_key, name, subject, preheader, heading, intro_text, body_html, cta_label, cta_url, footer_note, hero_image_url, feature_image_url, is_active, sort_order
+        )
+        VALUES (
+          :templateKey, :name, :subject, :preheader, :heading, :introText, :bodyHtml, :ctaLabel, :ctaUrl, :footerNote, :heroImageUrl, :featureImageUrl, 1, :sortOrder
+        )
+        ON DUPLICATE KEY UPDATE
+          name = VALUES(name),
+          subject = VALUES(subject),
+          preheader = VALUES(preheader),
+          heading = VALUES(heading),
+          intro_text = VALUES(intro_text),
+          body_html = VALUES(body_html),
+          cta_label = VALUES(cta_label),
+          cta_url = VALUES(cta_url),
+          footer_note = VALUES(footer_note),
+          hero_image_url = VALUES(hero_image_url),
+          feature_image_url = VALUES(feature_image_url),
+          is_active = VALUES(is_active),
+          sort_order = VALUES(sort_order)
+      `,
+      item
+    );
+  }
+
+  const [mainList] = await query(`SELECT id FROM newsletter_lists WHERE slug = 'main-newsletter' LIMIT 1`);
+
+  if (!mainList) {
+    return;
+  }
+
+  if (isEnabled(process.env.SEED_DEMO_CONTENT)) {
+    const demoSubscriberEmail = "newsletter-demo@nbgstravel.local";
+    const unsubscribeToken = crypto.createHash("sha256").update(demoSubscriberEmail).digest("hex");
+
+    await query(
+      `
+        INSERT INTO newsletter_subscribers (email, first_name, status, source, unsubscribe_token)
+        VALUES (:email, 'Demo', 'subscribed', 'admin', :unsubscribeToken)
+        ON DUPLICATE KEY UPDATE
+          first_name = VALUES(first_name),
+          status = VALUES(status),
+          source = VALUES(source)
+      `,
+      {
+        email: demoSubscriberEmail,
+        unsubscribeToken
+      }
+    );
+
+    const [subscriber] = await query(`SELECT id FROM newsletter_subscribers WHERE email = :email LIMIT 1`, {
+      email: demoSubscriberEmail
+    });
+
+    if (subscriber) {
+      await query(
+        `
+          INSERT INTO newsletter_list_subscribers (newsletter_list_id, newsletter_subscriber_id)
+          VALUES (:listId, :subscriberId)
+          ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP
+        `,
+        {
+          listId: mainList.id,
+          subscriberId: subscriber.id
+        }
+      );
+    }
+  }
+}
+
 async function seedPackages() {
   const packages = [
     {
@@ -61,6 +255,8 @@ async function seedPackages() {
       destination: "Zanzibar",
       country: "Tanzania",
       continent: "Africa",
+      regionName: "Zanzibar",
+      cityName: "Zanzibar",
       tripType: "Group Trip",
       durationLabel: "5 Nights / 6 Days",
       basePrice: 12999,
@@ -99,6 +295,8 @@ async function seedPackages() {
       destination: "Dubai",
       country: "United Arab Emirates",
       continent: "Asia",
+      regionName: "Dubai",
+      cityName: "Dubai",
       tripType: "Couples Package",
       durationLabel: "4 Nights / 5 Days",
       basePrice: 24999,
@@ -135,6 +333,8 @@ async function seedPackages() {
       destination: "Cape Town",
       country: "South Africa",
       continent: "Africa",
+      regionName: "Western Cape",
+      cityName: "Cape Town",
       tripType: "Local Package",
       durationLabel: "3 Nights / 4 Days",
       basePrice: 8999,
@@ -172,12 +372,12 @@ async function seedPackages() {
     await query(
       `
         INSERT INTO packages (
-          title, slug, package_category, destination, country, continent, trip_type, duration_label,
+          title, slug, package_category, destination, country, continent, region_name, city_name, trip_type, duration_label,
           base_price, pricing_model, quoted_from_label, deposit_amount, has_fixed_travel_dates,
           fixed_travel_start_date, fixed_travel_end_date, short_description, full_description, status, admin_meta_json
         )
         VALUES (
-          :title, :slug, :packageCategory, :destination, :country, :continent, :tripType, :durationLabel,
+          :title, :slug, :packageCategory, :destination, :country, :continent, :regionName, :cityName, :tripType, :durationLabel,
           :basePrice, :pricingModel, :quotedFromLabel, :depositAmount, :hasFixedTravelDates,
           :fixedTravelStartDate, :fixedTravelEndDate, :shortDescription, :fullDescription, :status, :adminMetaJson
         )
@@ -185,6 +385,8 @@ async function seedPackages() {
           destination = VALUES(destination),
           country = VALUES(country),
           continent = VALUES(continent),
+          region_name = VALUES(region_name),
+          city_name = VALUES(city_name),
           trip_type = VALUES(trip_type),
           duration_label = VALUES(duration_label),
           base_price = VALUES(base_price),
@@ -359,6 +561,7 @@ async function run() {
   await upsertRole("admin", "Client-facing operations and content management");
   await seedAdmin();
   await seedTerms();
+  await seedNewsletter();
 
   if (isEnabled(process.env.SEED_DEMO_CONTENT)) {
     await seedPackages();

@@ -15,6 +15,10 @@ dashboardRouter.get("/summary", requireAuth, async (req, res, next) => {
     );
     const [packagesCount] = await query(`SELECT COUNT(*) AS count FROM packages`);
     const [reviewsCount] = await query(`SELECT COUNT(*) AS count FROM reviews WHERE is_visible = 1`);
+    const [newsletterSubscribersCount] = await query(
+      `SELECT COUNT(*) AS count FROM newsletter_subscribers WHERE status = 'subscribed'`
+    );
+    const [newsletterListsCount] = await query(`SELECT COUNT(*) AS count FROM newsletter_lists WHERE is_active = 1`);
 
     res.json({
       summary: {
@@ -22,7 +26,9 @@ dashboardRouter.get("/summary", requireAuth, async (req, res, next) => {
         activeVisaApplications: visaCount.count,
         abandonedLeads: abandonedCount.count,
         packages: packagesCount.count,
-        visibleReviews: reviewsCount.count
+        visibleReviews: reviewsCount.count,
+        newsletterSubscribers: newsletterSubscribersCount.count,
+        newsletterLists: newsletterListsCount.count
       }
     });
   } catch (error) {

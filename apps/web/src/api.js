@@ -83,6 +83,16 @@ export async function submitAbandonedLead(payload) {
   );
 }
 
+export async function subscribeNewsletter(payload) {
+  return parseResponse(
+    await fetch(`${API_URL}/newsletter/subscribe`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+  );
+}
+
 function normalizePackage(pkg) {
   if (!pkg) {
     return pkg;

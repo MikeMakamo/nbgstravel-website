@@ -9,6 +9,7 @@ import { reviewRouter } from "./reviews.js";
 import { paymentRouter } from "./payments.js";
 import { dashboardRouter } from "./dashboard.js";
 import { mediaRouter } from "./media.js";
+import { newsletterRouter } from "./newsletter.js";
 
 export const apiRouter = Router();
 
@@ -22,3 +23,4 @@ apiRouter.use("/reviews", reviewRouter);
 apiRouter.use("/payments", paymentRouter);
 apiRouter.use("/dashboard", dashboardRouter);
 apiRouter.use("/media", mediaRouter);
+apiRouter.use("/newsletter", newsletterRouter);

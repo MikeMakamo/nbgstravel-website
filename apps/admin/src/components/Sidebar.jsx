@@ -1,7 +1,7 @@
 import React from "react";
 import { brandAssets } from "../assets.js";
 
-export default function Sidebar({ admin, activeView, setActiveView, summary, onLogout }) {
+export default function Sidebar({ admin, activeView, setActiveView, summary, onLogout, isOpen, onToggle }) {
   const items = [
     {
       id: "dashboard",
@@ -28,6 +28,12 @@ export default function Sidebar({ admin, activeView, setActiveView, summary, onL
       count: safeCount(summary?.activeVisaApplications)
     },
     {
+      id: "newsletter",
+      label: "Newsletter",
+      description: "Lists and campaigns",
+      count: safeCount(summary?.newsletterSubscribers)
+    },
+    {
       id: "unfinished",
       label: "Unfinished forms",
       description: "Abandoned captures",
@@ -36,25 +42,20 @@ export default function Sidebar({ admin, activeView, setActiveView, summary, onL
   ];
 
   return (
-    <aside className="admin-sidebar">
-      <button type="button" className="sidebar-brand sidebar-brand--logoonly" onClick={() => setActiveView("dashboard")}>
-        <img className="sidebar-brand__logo" src={brandAssets.mainLogo} alt="NBGS Travel" />
-      </button>
+    <aside className={`admin-sidebar ${isOpen ? "" : "is-hidden"}`.trim()}>
+      <div className="sidebar-head">
+        <button type="button" className="sidebar-brand sidebar-brand--logoonly" onClick={() => setActiveView("dashboard")}>
+          <img className="sidebar-brand__logo" src={brandAssets.mainLogo} alt="NBGS Travel" />
+        </button>
+
+        <button className="sidebar-close" type="button" onClick={onToggle} aria-label={isOpen ? "Hide sidebar" : "Show sidebar"}>
+          {isOpen ? "×" : "+"}
+        </button>
+      </div>
 
       <div className="sidebar-user">
         <p className="sidebar-user__name">{admin?.first_name || admin?.firstName} {admin?.last_name || admin?.lastName}</p>
         <p className="sidebar-user__role">{formatRole(admin?.role)}</p>
-      </div>
-
-      <div className="sidebar-quickstats">
-        <div>
-          <span>Packages live</span>
-          <strong>{summary?.packages || 0}</strong>
-        </div>
-        <div>
-          <span>Booking queue</span>
-          <strong>{summary?.activeBookings || 0}</strong>
-        </div>
       </div>
 
       <nav className="sidebar-nav" aria-label="Admin sections">

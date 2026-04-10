@@ -30,6 +30,8 @@ const packageSchema = z.object({
   destination: z.string().optional().nullable(),
   country: z.string().optional().nullable(),
   continent: z.string().optional().nullable(),
+  regionName: z.string().optional().nullable(),
+  cityName: z.string().optional().nullable(),
   tripType: z.string().optional().nullable(),
   durationLabel: z.string().optional().nullable(),
   basePrice: z.coerce.number().nonnegative().default(0),
@@ -52,7 +54,7 @@ packageRouter.get("/admin/list/all", requireAuth, async (req, res, next) => {
     const rows = await query(
       `
         SELECT id, title, slug, package_category, destination, country, continent, trip_type, duration_label,
-               base_price, pricing_model, status, admin_meta_json, created_at, updated_at
+               region_name, city_name, base_price, pricing_model, status, admin_meta_json, created_at, updated_at
         FROM packages
         ORDER BY updated_at DESC
       `
@@ -68,7 +70,7 @@ packageRouter.get("/", async (req, res, next) => {
   try {
     const rows = await query(
       `
-        SELECT id, title, slug, package_category, destination, country, continent, trip_type, duration_label, base_price, currency_code,
+        SELECT id, title, slug, package_category, destination, country, continent, region_name, city_name, trip_type, duration_label, base_price, currency_code,
                pricing_model, quoted_from_label, deposit_amount, has_fixed_travel_dates, fixed_travel_start_date, fixed_travel_end_date,
                short_description, full_description, admin_meta_json, status, created_at, updated_at
         FROM packages
@@ -149,13 +151,13 @@ packageRouter.post("/", requireAuth, requireRole("super_admin", "admin"), async 
     const result = await query(
       `
         INSERT INTO packages (
-          title, slug, package_category, destination, country, continent, trip_type, duration_label,
+          title, slug, package_category, destination, country, continent, region_name, city_name, trip_type, duration_label,
           base_price, pricing_model, quoted_from_label, deposit_amount, has_fixed_travel_dates,
           fixed_travel_start_date, fixed_travel_end_date, short_description, full_description, status,
           created_by_admin_id, updated_by_admin_id, admin_meta_json
         )
         VALUES (
-          :title, :slug, :packageCategory, :destination, :country, :continent, :tripType, :durationLabel,
+          :title, :slug, :packageCategory, :destination, :country, :continent, :regionName, :cityName, :tripType, :durationLabel,
           :basePrice, :pricingModel, :quotedFromLabel, :depositAmount, :hasFixedTravelDates,
           :fixedTravelStartDate, :fixedTravelEndDate, :shortDescription, :fullDescription, :status,
           :adminId, :adminId, :adminMetaJson
@@ -167,9 +169,11 @@ packageRouter.post("/", requireAuth, requireRole("super_admin", "admin"), async 
         adminId: req.admin.id,
         fixedTravelStartDate: data.fixedTravelStartDate || null,
         fixedTravelEndDate: data.fixedTravelEndDate || null,
-        destination: data.destination || null,
+        destination: data.destination || data.cityName || null,
         country: data.country || null,
         continent: data.continent || null,
+        regionName: data.regionName || null,
+        cityName: data.cityName || data.destination || null,
         tripType: data.tripType || null,
         durationLabel: data.durationLabel || null,
         quotedFromLabel: data.quotedFromLabel || null,
@@ -203,6 +207,8 @@ packageRouter.put("/:id", requireAuth, requireRole("super_admin", "admin"), asyn
           destination = :destination,
           country = :country,
           continent = :continent,
+          region_name = :regionName,
+          city_name = :cityName,
           trip_type = :tripType,
           duration_label = :durationLabel,
           base_price = :basePrice,
@@ -227,9 +233,11 @@ packageRouter.put("/:id", requireAuth, requireRole("super_admin", "admin"), asyn
         adminId: req.admin.id,
         fixedTravelStartDate: data.fixedTravelStartDate || null,
         fixedTravelEndDate: data.fixedTravelEndDate || null,
-        destination: data.destination || null,
+        destination: data.destination || data.cityName || null,
         country: data.country || null,
         continent: data.continent || null,
+        regionName: data.regionName || null,
+        cityName: data.cityName || data.destination || null,
         tripType: data.tripType || null,
         durationLabel: data.durationLabel || null,
         quotedFromLabel: data.quotedFromLabel || null,

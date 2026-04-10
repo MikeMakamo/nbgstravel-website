@@ -5,6 +5,7 @@ import { getPackage, getPackages } from "../api.js";
 import { fallbackPackages } from "../data/fallback.js";
 import { PackageBookingModal } from "../components/forms/PackageBookingModal.jsx";
 import { getPackageVisual, liveMedia } from "../siteContent.js";
+import { formatLocationHierarchy, getPrimaryLocationLabel } from "../utils/location.js";
 
 const fallbackTripPolicy = [
   "All prices are indicative and correct at time of loading onto the NBGS Travel website and are subject to change due to currency fluctuations, rate increases, airfare increases and availability.",
@@ -174,6 +175,7 @@ export function PackageDetailPage() {
   }, [catalog, pkg]);
 
   const heroImage = pkg?.slug === "visit-zanzibar-2026" ? liveMedia.zanzibarHero : getPackageVisual(pkg);
+  const primaryLocationLabel = getPrimaryLocationLabel(pkg);
 
   return (
     <>
@@ -191,10 +193,7 @@ export function PackageDetailPage() {
             <div className="package-detail-stat-grid">
               <div className="package-detail-stat-card">
                 <span>Location</span>
-                <strong>
-                  {pkg.destination}
-                  {pkg.country ? `, ${pkg.country}` : ""}
-                </strong>
+                <strong>{formatLocationHierarchy(pkg)}</strong>
               </div>
               <div className="package-detail-stat-card">
                 <span>Travel Date</span>
@@ -243,7 +242,7 @@ export function PackageDetailPage() {
           <div className="package-detail-main">
             <article className="package-story-card">
               <span className="package-meta">About This Trip</span>
-              <h2>{pkg.destination ? `${pkg.destination} travel experience` : pkg.title}</h2>
+              <h2>{primaryLocationLabel === "Location" ? pkg.title : `${primaryLocationLabel} travel experience`}</h2>
               <p>{tripStory}</p>
             </article>
 
@@ -323,10 +322,7 @@ export function PackageDetailPage() {
                   <div className="similar-trip-copy">
                     <span className="listing-type-chip">{getCategoryLabel(trip.package_category)}</span>
                     <h3>{trip.title}</h3>
-                    <p>
-                      {trip.destination}
-                      {trip.country ? `, ${trip.country}` : ""}
-                    </p>
+                    <p>{formatLocationHierarchy(trip)}</p>
                     <div className="similar-trip-meta">
                       <strong>{formatCurrency(trip.base_price, trip.currency_code)}</strong>
                       <span>{getPricingModelLabel(trip.pricing_model)}</span>

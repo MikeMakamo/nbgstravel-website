@@ -6,6 +6,7 @@ import {
   getAbandonedLeads,
   getBookings,
   getMe,
+  getNewsletterData,
   getPackages,
   getSummary,
   getVisaApplications,
@@ -16,14 +17,19 @@ import {
   uploadMedia
 } from "./api.js";
 import DataTable from "./components/DataTable.jsx";
+import DropdownSelect from "./components/DropdownSelect.jsx";
 import LoginScreen from "./components/LoginScreen.jsx";
+import NewsletterWorkspace from "./components/NewsletterWorkspace.jsx";
 import SectionCard from "./components/SectionCard.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import StatCard from "./components/StatCard.jsx";
 import StatusBadge from "./components/StatusBadge.jsx";
 import { peopleAssets, travelGalleryAssets } from "./assets.js";
+import { getAllCountryOptions, getCityOptions, getContinentOptions, getCountryOptions, getRegionOptions } from "./data/locationHierarchy.js";
+import { formatLocationHierarchy } from "./utils/location.js";
 
 const tokenStorageKey = "nbgs-admin-token";
+const sidebarStorageKey = "nbgs-admin-sidebar-open";
 
 const initialPackageForm = {
   title: "",
@@ -31,6 +37,8 @@ const initialPackageForm = {
   destination: "",
   country: "",
   continent: "",
+  regionName: "",
+  cityName: "",
   tripType: "",
   durationLabel: "",
   basePrice: "",
@@ -91,11 +99,16 @@ const sectionMeta = {
   unfinished: {
     title: "Unfinished forms",
     description: "Recover customers who left the modal before finishing the process."
+  },
+  newsletter: {
+    title: "Newsletter",
+    description: "Templates, subscribers, lists, and sends."
   }
 };
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem(tokenStorageKey) || "");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(localStorage.getItem(sidebarStorageKey) !== "0");
   const [activeView, setActiveView] = useState("dashboard");
   const [admin, setAdmin] = useState(null);
   const [summary, setSummary] = useState(null);
@@ -104,6 +117,7 @@ export default function App() {
   const [bookings, setBookings] = useState([]);
   const [applications, setApplications] = useState([]);
   const [abandonedLeads, setAbandonedLeads] = useState([]);
+  const [newsletterData, setNewsletterData] = useState({ lists: [], subscribers: [], templates: [], campaigns: [] });
   const [editingPackageId, setEditingPackageId] = useState(null);
   const [packageSearch, setPackageSearch] = useState("");
   const [packageStatusFilter, setPackageStatusFilter] = useState("all");
@@ -123,6 +137,10 @@ export default function App() {
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
 
   useEffect(() => {
+    localStorage.setItem(sidebarStorageKey, isSidebarOpen ? "1" : "0");
+  }, [isSidebarOpen]);
+
+  useEffect(() => {
     if (!token) {
       return;
     }
@@ -133,14 +151,15 @@ export default function App() {
       setIsLoading(true);
 
       try {
-        const [meData, summaryData, packagesData, visasData, bookingsData, visaApplicationsData, abandonedLeadsData] = await Promise.all([
+        const [meData, summaryData, packagesData, visasData, bookingsData, visaApplicationsData, abandonedLeadsData, newsletterBootstrap] = await Promise.all([
           getMe(token),
           getSummary(token),
           getPackages(token),
           getVisas(token),
           getBookings(token),
           getVisaApplications(token),
-          getAbandonedLeads(token)
+          getAbandonedLeads(token),
+          getNewsletterData(token)
         ]);
 
         if (!isMounted) {
@@ -154,6 +173,7 @@ export default function App() {
         setBookings(bookingsData.bookings);
         setApplications(visaApplicationsData.applications);
         setAbandonedLeads(abandonedLeadsData.abandonedLeads);
+        setNewsletterData(newsletterBootstrap.newsletter);
       } catch (error) {
         if (!isMounted) {
           return;
@@ -187,7 +207,7 @@ export default function App() {
     }
   }, [bookings, selectedBookingId]);
 
-  async function refreshData() {
+  async function refreshData(silent = false) {
     if (!token) {
       return;
     }
@@ -195,13 +215,14 @@ export default function App() {
     setIsRefreshing(true);
 
     try {
-      const [summaryData, packagesData, visasData, bookingsData, visaApplicationsData, abandonedLeadsData] = await Promise.all([
+      const [summaryData, packagesData, visasData, bookingsData, visaApplicationsData, abandonedLeadsData, newsletterBootstrap] = await Promise.all([
         getSummary(token),
         getPackages(token),
         getVisas(token),
         getBookings(token),
         getVisaApplications(token),
-        getAbandonedLeads(token)
+        getAbandonedLeads(token),
+        getNewsletterData(token)
       ]);
 
       setSummary(summaryData.summary);
@@ -210,7 +231,10 @@ export default function App() {
       setBookings(bookingsData.bookings);
       setApplications(visaApplicationsData.applications);
       setAbandonedLeads(abandonedLeadsData.abandonedLeads);
-      setMessage("Dashboard refreshed.");
+      setNewsletterData(newsletterBootstrap.newsletter);
+      if (!silent) {
+        setMessage("Dashboard refreshed.");
+      }
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -288,6 +312,7 @@ export default function App() {
     setBookings([]);
     setApplications([]);
     setAbandonedLeads([]);
+    setNewsletterData({ lists: [], subscribers: [], templates: [], campaigns: [] });
     setEditingPackageId(null);
     setSelectedBookingId(null);
     setActiveView("dashboard");
@@ -298,6 +323,38 @@ export default function App() {
     setEditingPackageId(null);
     setPackageForm(initialPackageForm);
     setActiveView("packageEditor");
+  }
+
+  function handlePackageContinentChange(value) {
+    setPackageForm((currentForm) => ({
+      ...currentForm,
+      continent: value,
+      country: "",
+      regionName: ""
+    }));
+  }
+
+  function handlePackageCountryChange(value) {
+    setPackageForm((currentForm) => ({
+      ...currentForm,
+      country: value,
+      regionName: ""
+    }));
+  }
+
+  function handlePackageRegionChange(value) {
+    setPackageForm((currentForm) => ({
+      ...currentForm,
+      regionName: value
+    }));
+  }
+
+  function handlePackageCityChange(value) {
+    setPackageForm((currentForm) => ({
+      ...currentForm,
+      cityName: value,
+      destination: value
+    }));
   }
 
   function openEditPackage(pkg) {
@@ -429,9 +486,18 @@ export default function App() {
   ).length;
   const openBookings = bookings.filter((booking) => ["new", "contact_pending"].includes(booking.status)).length;
   const openLeads = abandonedLeads.filter((lead) => ["new", "contact_pending"].includes(lead.status)).length;
+  const continentOptions = getContinentOptions(packageForm.continent);
+  const countryOptions = getCountryOptions(packageForm.continent, packageForm.country);
+  const regionOptions = getRegionOptions(packageForm.continent, packageForm.country, packageForm.regionName);
+  const cityOptions = getCityOptions(packageForm.continent, packageForm.country, packageForm.regionName, packageForm.cityName);
+  const visaCountryOptions = getAllCountryOptions(visaForm.country);
   const filteredPackages = packages.filter((pkg) => {
     const search = packageSearch.trim().toLowerCase();
-    const matchesSearch = !search || [pkg.title, pkg.destination, pkg.country, pkg.slug].filter(Boolean).some((value) => String(value).toLowerCase().includes(search));
+    const matchesSearch =
+      !search ||
+      [pkg.title, pkg.destination, pkg.country, pkg.continent, pkg.region_name, pkg.city_name, pkg.slug]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(search));
     const matchesStatus = packageStatusFilter === "all" || pkg.status === packageStatusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -583,15 +649,39 @@ export default function App() {
   ];
 
   return (
-    <div className="admin-app">
-      <Sidebar admin={admin} activeView={activeView} setActiveView={setActiveView} summary={summary} onLogout={handleLogout} />
+    <div className={`admin-app ${isSidebarOpen ? "" : "admin-app--sidebar-hidden"}`.trim()}>
+      <Sidebar
+        admin={admin}
+        activeView={activeView}
+        setActiveView={setActiveView}
+        summary={summary}
+        onLogout={handleLogout}
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen((current) => !current)}
+      />
 
       <main className="admin-main">
-        <header className="admin-topbar">
-          <div className="section-heading">
-            <span className="eyebrow">NBGS operations</span>
-            <h2>{sectionMeta[activeView].title}</h2>
-            <p>{sectionMeta[activeView].description}</p>
+        <header className="admin-topbar panel">
+          <div className="admin-topbar__main">
+            <button
+              className="menu-toggle"
+              type="button"
+              onClick={() => setIsSidebarOpen((current) => !current)}
+              aria-label={isSidebarOpen ? "Hide menu" : "Show menu"}
+            >
+              <span className="menu-toggle__icon" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+              <span className="menu-toggle__label">{isSidebarOpen ? "Hide menu" : "Show menu"}</span>
+            </button>
+
+            <div className="section-heading">
+              <span className="eyebrow">NBGS operations</span>
+              <h2>{sectionMeta[activeView].title}</h2>
+              <p>{sectionMeta[activeView].description}</p>
+            </div>
           </div>
 
           <div className="topbar-actions">
@@ -652,7 +742,7 @@ export default function App() {
                   <StatCard label="Active bookings" value={summary?.activeBookings || 0} detail="New or contact pending package requests" />
                   <StatCard label="Visa queue" value={summary?.activeVisaApplications || 0} detail="Submitted or payment-pending visa applications" />
                   <StatCard label="Unfinished forms" value={summary?.abandonedLeads || 0} detail="Customers who left before completing a modal" />
-                  <StatCard label="Visible reviews" value={summary?.visibleReviews || 0} detail="Reviews currently exposed to the public site" />
+                  <StatCard label="Newsletter contacts" value={summary?.newsletterSubscribers || 0} detail="Subscribed contacts now available for campaigns" />
                 </section>
 
                 <div className="content-grid content-grid--overview">
@@ -725,6 +815,14 @@ export default function App() {
                       Open visa desk
                     </button>
                   </article>
+                  <article className="module-card">
+                    <span className="eyebrow">Newsletter</span>
+                    <h3>Lists and campaigns</h3>
+                    <p>{summary?.newsletterSubscribers || 0} subscribers across {summary?.newsletterLists || 0} list(s).</p>
+                    <button className="text-button" type="button" onClick={() => setActiveView("newsletter")}>
+                      Open newsletter
+                    </button>
+                  </article>
                 </section>
               </>
             ) : null}
@@ -790,7 +888,7 @@ export default function App() {
                                     </button>
                                   </div>
                                 </td>
-                                <td>{[pkg.destination, pkg.country, pkg.continent].filter(Boolean).join(", ") || "Not set"}</td>
+                                <td>{formatLocationHierarchy(pkg)}</td>
                                 <td>
                                   <div className="record-primary record-primary--compact">
                                     <strong>{formatCurrency(pkg.base_price)}</strong>
@@ -853,16 +951,47 @@ export default function App() {
                         <input value={packageForm.tripType} onChange={(event) => setPackageForm({ ...packageForm, tripType: event.target.value })} placeholder="International group trip" />
                       </label>
                       <label className="field">
-                        <span>Country</span>
-                        <input value={packageForm.country} onChange={(event) => setPackageForm({ ...packageForm, country: event.target.value })} />
-                      </label>
-                      <label className="field">
                         <span>Continent</span>
-                        <input value={packageForm.continent} onChange={(event) => setPackageForm({ ...packageForm, continent: event.target.value })} />
+                        <DropdownSelect
+                          value={packageForm.continent}
+                          options={continentOptions}
+                          onChange={handlePackageContinentChange}
+                          placeholder="Select continent"
+                        />
                       </label>
                       <label className="field">
-                        <span>Destination</span>
-                        <input value={packageForm.destination} onChange={(event) => setPackageForm({ ...packageForm, destination: event.target.value })} />
+                        <span>Country</span>
+                        <DropdownSelect
+                          value={packageForm.country}
+                          options={countryOptions}
+                          onChange={handlePackageCountryChange}
+                          placeholder={packageForm.continent ? "Select country" : "Select continent first"}
+                          disabled={!packageForm.continent}
+                        />
+                      </label>
+                      <label className="field">
+                        <span>Region / State / Province</span>
+                        <DropdownSelect
+                          value={packageForm.regionName}
+                          options={regionOptions}
+                          onChange={handlePackageRegionChange}
+                          placeholder={packageForm.country ? "Select province / state" : "Select country first"}
+                          disabled={!packageForm.country}
+                        />
+                      </label>
+                      <label className="field">
+                        <span>City</span>
+                        <input
+                          value={packageForm.cityName}
+                          onChange={(event) => handlePackageCityChange(event.target.value)}
+                          placeholder="Cape Town"
+                          list="package-city-suggestions"
+                        />
+                        <datalist id="package-city-suggestions">
+                          {cityOptions.map((city) => (
+                            <option key={city} value={city} />
+                          ))}
+                        </datalist>
                       </label>
                       <label className="field">
                         <span>Category</span>
@@ -1027,6 +1156,10 @@ export default function App() {
                       <strong>{packageForm.travelDateLabel || "Will be shown from fixed dates or booking form"}</strong>
                     </div>
                     <div className="preview-card">
+                      <span>Location path</span>
+                      <p>{formatLocationHierarchy(packageForm)}</p>
+                    </div>
+                    <div className="preview-card">
                       <span>Gallery</span>
                       <p>{linesToArray(packageForm.galleryText).length ? `${linesToArray(packageForm.galleryText).length} image(s) uploaded` : "No gallery images yet."}</p>
                     </div>
@@ -1189,7 +1322,12 @@ export default function App() {
                         </label>
                         <label className="field">
                           <span>Country</span>
-                          <input value={visaForm.country} onChange={(event) => setVisaForm({ ...visaForm, country: event.target.value })} required />
+                          <DropdownSelect
+                            value={visaForm.country}
+                            options={visaCountryOptions}
+                            onChange={(value) => setVisaForm({ ...visaForm, country: value })}
+                            placeholder="Select country"
+                          />
                         </label>
                         <label className="field">
                           <span>Processing time</span>
@@ -1246,6 +1384,16 @@ export default function App() {
                   </SectionCard>
                 </div>
               </>
+            ) : null}
+
+            {activeView === "newsletter" ? (
+              <NewsletterWorkspace
+                token={token}
+                newsletter={newsletterData}
+                summary={summary}
+                onRefresh={refreshData}
+                setMessage={setMessage}
+              />
             ) : null}
           </>
         )}
@@ -1305,9 +1453,11 @@ function buildPackagePayload(form) {
   return {
     title: form.title,
     packageCategory: form.packageCategory,
-    destination: form.destination,
+    destination: form.cityName || form.destination,
     country: form.country,
     continent: form.continent,
+    regionName: form.regionName,
+    cityName: form.cityName || form.destination,
     tripType: form.tripType,
     durationLabel: form.durationLabel || (form.nights ? `${form.nights} nights` : ""),
     basePrice: form.basePrice,
@@ -1364,9 +1514,11 @@ function createPackageFormFromRecord(pkg) {
     ...initialPackageForm,
     title: pkg.title || "",
     packageCategory: pkg.package_category || "package",
-    destination: pkg.destination || "",
+    destination: pkg.destination || pkg.city_name || "",
     country: pkg.country || "",
     continent: pkg.continent || "",
+    regionName: pkg.region_name || "",
+    cityName: pkg.city_name || pkg.destination || "",
     tripType: pkg.trip_type || "",
     durationLabel: pkg.duration_label || "",
     basePrice: pkg.base_price || "",

@@ -6,6 +6,7 @@ export const config = {
   port: Number(process.env.PORT || 4000),
   appUrl: process.env.APP_URL || "http://localhost:5173",
   adminUrl: process.env.ADMIN_URL || "http://localhost:5174",
+  apiPublicUrl: process.env.API_PUBLIC_URL || `${(process.env.APP_URL || "http://localhost:5173").replace(/\/$/, "")}/api`,
   jwtSecret: process.env.JWT_SECRET || "change-me",
   db: {
     host: process.env.DB_HOST || "127.0.0.1",
