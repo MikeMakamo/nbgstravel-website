@@ -8,3 +8,7 @@ apps/web/.vite
 apps/admin/.vite
 apps/api/uploads
 *.log
+*.zip
+temp-*.html
+temp-*.json
+tmp_*.html

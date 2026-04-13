@@ -12,6 +12,9 @@
     "dev": "concurrently \"npm run dev --workspace apps/api\" \"npm run dev --workspace apps/web\" \"npm run dev --workspace apps/admin\"",
     "build": "npm run build --workspace packages/shared && npm run build --workspace apps/api && npm run build --workspace apps/web && npm run build --workspace apps/admin",
     "build:deploy": "node scripts/build-deploy.mjs",
+    "prepare:production": "node scripts/prepare-production-deploy.mjs",
+    "restore:production": "npm run restore:production --workspace apps/api",
+    "setup:production": "npm run setup:production --workspace apps/api",
     "lint": "npm run lint --workspace apps/api && npm run lint --workspace apps/web && npm run lint --workspace apps/admin",
     "migrate": "npm run migrate --workspace apps/api",
     "seed": "npm run seed --workspace apps/api"

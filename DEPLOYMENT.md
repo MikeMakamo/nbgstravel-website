@@ -1,161 +1,156 @@
-# NBGSTRAVEL Deployment
+# NBGSTRAVEL Production Deployment
 
-This project deploys as:
+This repo now has one production deployment path.
 
-- static public site from `apps/web/dist`
-- static admin site from `apps/admin/dist`
-- one running Node.js app from `apps/api`
+The live layout is:
+- `https://nbgstravel.co.za` for the public site
+- `https://admin.nbgstravel.co.za` for the admin
+- `https://api.nbgstravel.co.za` for the API
 
-## 1. Build The Frontends Locally
+Only the API runs as a Node.js application.
+The public site and admin are uploaded as static files.
+
+## 1. Prepare the deployment bundle locally
 
 From the project root:
 
 ```bash
 npm install
-npm run build:deploy
+npm run prepare:production
 ```
 
-That produces:
+That command does all of the following in one pass:
+- builds the public site with `https://api.nbgstravel.co.za/api`
+- builds the admin with `https://api.nbgstravel.co.za/api`
+- copies both static builds into `deployment/production`
+- copies the current API uploads into `deployment/production/uploads`
+- exports a production-safe copy of the current local database state into `deployment/production/database`
 
-- `apps/web/dist`
-- `apps/admin/dist`
+The output folder is:
+- `deployment/production`
 
-The deploy build bakes the frontend API URL to `/api` by default.
+Important:
+- this deployment export keeps the real local content state
+- it excludes local transient/test tables like bookings, inquiries, abandoned leads, email logs, audit logs, and review sync logs
 
-If the API will live on a different domain or subdomain, build with:
+## 2. Fresh server setup
 
-```bash
-set DEPLOY_API_URL=https://api.your-domain/api
-npm run build:deploy
-```
+Clone or pull the latest repo on the server first.
 
-If the admin is deployed on its own subdomain, build it at the root path:
+For cPanel Node.js Application Manager:
+- app root: `apps/api`
+- startup file: `start.cjs`
 
-```bash
-set DEPLOY_API_URL=https://api.your-domain/api
-set DEPLOY_ADMIN_PUBLIC_PATH=/
-npm run build:deploy
-```
+Do not point cPanel to `src/server.js` directly.
 
-If the main website is also deployed under a subpath, you can override that too:
+## 3. API environment
 
-```bash
-set DEPLOY_WEB_PUBLIC_PATH=/some-subpath/
-```
+Use:
+- `apps/api/.env.production.example`
 
-## 2. Upload Static Files
+or the generated copy:
+- `deployment/production/api.env.example`
 
-Upload:
+Set real values for:
+- `JWT_SECRET`
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+- SMTP values
+- PayFast values
 
-- contents of `apps/web/dist` to your main web root
-- contents of `apps/admin/dist` to `/admin`
-
-If the admin is on `admin.your-domain`, upload `apps/admin/dist` to that subdomain root instead.
-
-Both builds include the required `.htaccess` files for SPA routing.
-
-## 3. Deploy The API
-
-Use `apps/api` as the cPanel Node.js app root.
-
-Startup file:
+The live URL values should remain:
 
 ```text
-start.cjs
+APP_URL=https://nbgstravel.co.za
+ADMIN_URL=https://admin.nbgstravel.co.za
+API_PUBLIC_URL=https://api.nbgstravel.co.za/api
 ```
 
-Inside the API app root run:
+## 4. API install and schema
+
+Inside `apps/api` on the server:
 
 ```bash
 npm install --omit=dev
 npm run migrate
-npm run seed
 ```
 
-## 4. Configure API Environment Variables
+## 5. Restore the production content snapshot
 
-Minimum required values:
+Inside `apps/api` on the server:
 
-```text
-APP_URL=https://your-domain
-ADMIN_URL=https://your-domain/admin
-JWT_SECRET=replace-with-a-long-random-secret
-
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=your_database_name
-DB_USER=your_database_user
-DB_PASSWORD=your_database_password
-
-SEED_SUPER_ADMIN_EMAIL=admin@your-domain
-SEED_SUPER_ADMIN_PASSWORD=choose-a-strong-password
-SEED_SUPER_ADMIN_FIRST_NAME=System
-SEED_SUPER_ADMIN_LAST_NAME=Owner
-SEED_SUPER_ADMIN_PHONE=+27000000000
-SEED_DEMO_CONTENT=false
+```bash
+npm run restore:production
 ```
 
-Optional service variables:
+If you want one command for both schema and content:
 
-```text
-SMTP_HOST=
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASSWORD=
-SMTP_FROM="NBGSTRAVEL <no-reply@your-domain>"
-
-PAYFAST_MERCHANT_ID=
-PAYFAST_MERCHANT_KEY=
-PAYFAST_PASSPHRASE=
-PAYFAST_RETURN_URL=https://your-domain/visa/payment-complete
-PAYFAST_CANCEL_URL=https://your-domain/visa/payment-cancelled
-PAYFAST_NOTIFY_URL=https://your-domain/api/payments/payfast/notify
+```bash
+npm run setup:production
 ```
 
-## 5. Seed Behavior
+If you are working from the repo root instead, the same commands are also available there:
 
-`npm run seed` is now safe for a real server by default.
-
-It creates:
-
-- roles
-- super admin account
-- terms documents
-
-It does **not** create demo packages or visa offerings unless you explicitly set:
-
-```text
-SEED_DEMO_CONTENT=true
+```bash
+npm run restore:production
+npm run setup:production
 ```
 
-## 6. Live URL Layout
+This restores the exact current local app state from:
+- `deployment/production/database/production-database.sql`
 
-Expected layout:
+Do **not** run `npm run seed` afterward unless you intentionally want to re-seed defaults.
 
-- `https://your-domain/` public site
-- `https://your-domain/admin/` admin site
-- `https://your-domain/api/*` API
+The restored SQL already contains the current admin, newsletter, visa, package, and terms data.
 
-Alternative supported layout:
+Optional fallback:
+- you can still import `deployment/production/database/production-database.sql` with phpMyAdmin if you prefer
 
-- `https://your-domain/` public site
-- `https://admin.your-domain/` admin site
-- `https://api.your-domain/` API
+## 6. Upload API media
 
-## 7. cPanel Note
+Copy:
+- `deployment/production/uploads`
 
-For cPanel Node.js apps, set the startup file relative to the app root.
+into the live API uploads path so it becomes:
+- `apps/api/uploads`
 
-Use:
+This step is required because the imported database references those uploaded files.
 
-```text
-start.cjs
-```
+## 7. Upload the static frontends
 
-Do not use:
+Upload:
+- `deployment/production/web-dist` to the main site document root
+- `deployment/production/admin-dist` to the admin subdomain document root
 
-- a full filesystem path
-- a duplicated repo path
-- `src/server.js` directly in cPanel Application Manager
+These folders already include the SPA rewrite files needed for routing.
 
-The API code is ESM, and `start.cjs` is the CommonJS bootstrap specifically added for cPanel and LiteSpeed loaders.
+## 8. Restart and verify
+
+Restart the Node.js app, then verify:
+
+- `https://api.nbgstravel.co.za/health`
+- `https://api.nbgstravel.co.za/api/auth/login`
+- `https://nbgstravel.co.za/packages`
+- `https://admin.nbgstravel.co.za`
+
+Also verify:
+- package count matches the export
+- package detail pages show imported images
+- multi-stop trips show route stops
+- admin newsletter loads without `404`
+
+## 9. Production bundle contents
+
+Authoritative deployment bundle:
+- `deployment/production/README.md`
+- `deployment/production/api.env.example`
+- `deployment/production/database/production-database.sql`
+- `deployment/production/database/database-summary.json`
+- `deployment/production/uploads/`
+- `deployment/production/web-dist/`
+- `deployment/production/admin-dist/`
+
+This is the only deployment bundle that should be used going forward.
