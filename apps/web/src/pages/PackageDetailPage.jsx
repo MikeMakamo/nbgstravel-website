@@ -5,7 +5,8 @@ import { getPackage, getPackages } from "../api.js";
 import { fallbackPackages } from "../data/fallback.js";
 import { PackageBookingModal } from "../components/forms/PackageBookingModal.jsx";
 import { getPackageVisual, liveMedia } from "../siteContent.js";
-import { formatLocationHierarchy, getPrimaryLocationLabel } from "../utils/location.js";
+import { formatLocationHierarchy, formatRouteSummary, getPrimaryLocationLabel, getRouteStops, getRouteStopLabel } from "../utils/location.js";
+import { resolveApiAssetUrl } from "../utils/media.js";
 
 const fallbackTripPolicy = [
   "All prices are indicative and correct at time of loading onto the NBGS Travel website and are subject to change due to currency fluctuations, rate increases, airfare increases and availability.",
@@ -79,7 +80,7 @@ function getCategoryLabel(category) {
 function normalizeMediaUrl(mediaItem) {
   const value = mediaItem?.file_url || mediaItem?.file_path;
   if (!value) return null;
-  return value;
+  return resolveApiAssetUrl(value);
 }
 
 function splitTextList(value) {
@@ -139,7 +140,9 @@ export function PackageDetailPage() {
       return mediaItems;
     }
 
-    const adminGallery = Array.isArray(pkg?.adminMeta?.gallery) ? pkg.adminMeta.gallery.filter(Boolean).slice(0, 6) : [];
+    const adminGallery = Array.isArray(pkg?.adminMeta?.gallery)
+      ? pkg.adminMeta.gallery.filter(Boolean).map((item) => resolveApiAssetUrl(item)).slice(0, 6)
+      : [];
 
     if (adminGallery.length) {
       return adminGallery;
@@ -154,6 +157,8 @@ export function PackageDetailPage() {
     const items = splitTextList(pkg?.adminMeta?.tripPolicy);
     return items.length ? items : fallbackTripPolicy;
   }, [pkg]);
+
+  const routeStops = useMemo(() => getRouteStops(pkg), [pkg]);
 
   const similarTrips = useMemo(() => {
     const others = catalog.filter((item) => item.slug !== pkg?.slug);
@@ -195,6 +200,12 @@ export function PackageDetailPage() {
                 <span>Location</span>
                 <strong>{formatLocationHierarchy(pkg)}</strong>
               </div>
+              {routeStops.length ? (
+                <div className="package-detail-stat-card">
+                  <span>Route</span>
+                  <strong>{formatRouteSummary(pkg)}</strong>
+                </div>
+              ) : null}
               <div className="package-detail-stat-card">
                 <span>Travel Date</span>
                 <strong>{getTravelDateLabel(pkg)}</strong>
@@ -245,6 +256,28 @@ export function PackageDetailPage() {
               <h2>{primaryLocationLabel === "Location" ? pkg.title : `${primaryLocationLabel} travel experience`}</h2>
               <p>{tripStory}</p>
             </article>
+
+            {routeStops.length ? (
+              <article className="package-story-card package-route-card">
+                <span className="package-meta">Trip Route</span>
+                <h2>Where this journey takes you</h2>
+                <div className="package-route-list">
+                  {routeStops.map((stop, index) => (
+                    <div key={`${getRouteStopLabel(stop)}-${index}`} className="package-route-stop">
+                      <div className="package-route-stop__index">{index + 1}</div>
+                      <div className="package-route-stop__body">
+                        <strong>{getRouteStopLabel(stop) || "Stop details to be confirmed"}</strong>
+                        <span>{[stop.country, stop.region_name || stop.regionName].filter(Boolean).join(" | ")}</span>
+                        {stop.nights_at_stop || stop.nightsAtStop ? (
+                          <small>{stop.nights_at_stop || stop.nightsAtStop} night{Number(stop.nights_at_stop || stop.nightsAtStop) === 1 ? "" : "s"} at this stop</small>
+                        ) : null}
+                        {stop.note ? <p>{stop.note}</p> : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ) : null}
 
             <div className="inclusion-exclusion-grid package-detail-panels">
               <article className="package-detail-panel">

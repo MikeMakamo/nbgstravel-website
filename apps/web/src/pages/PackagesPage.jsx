@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { getPackages } from "../api.js";
 import { fallbackPackages } from "../data/fallback.js";
 import { getPackageVisual } from "../siteContent.js";
-import { formatLocationHierarchy, getLocationHierarchyParts } from "../utils/location.js";
+import { formatLocationHierarchy, formatRouteSummary, getLocationHierarchyParts } from "../utils/location.js";
 
 function formatPrice(amount, currency = "ZAR") {
   return new Intl.NumberFormat("en-ZA", {
@@ -86,7 +86,7 @@ export function PackagesPage() {
     const searchTerm = filters.search.trim().toLowerCase();
 
     return packages.filter((pkg) => {
-      const searchableText = [pkg.title, pkg.destination, pkg.country, pkg.continent, pkg.trip_type, ...getLocationHierarchyParts(pkg)]
+      const searchableText = [pkg.title, pkg.destination, pkg.country, pkg.continent, pkg.trip_type, formatRouteSummary(pkg), ...getLocationHierarchyParts(pkg)]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -244,6 +244,12 @@ export function PackagesPage() {
                       <span className="listing-meta-label">Location</span>
                       <span className="listing-meta-value">{formatLocationHierarchy(pkg)}</span>
                     </div>
+                    {pkg.routeStops?.length ? (
+                      <div className="listing-meta-row">
+                        <span className="listing-meta-label">Route</span>
+                        <span className="listing-meta-value">{formatRouteSummary(pkg)}</span>
+                      </div>
+                    ) : null}
 
                     <div className="listing-meta-row">
                       <span className="listing-meta-label">Travel Date</span>

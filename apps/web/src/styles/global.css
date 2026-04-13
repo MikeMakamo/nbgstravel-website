@@ -1656,6 +1656,50 @@ summary {
   line-height: 1.78;
 }
 
+.package-route-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.package-route-stop {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 16px 18px;
+  border: 1px solid rgba(10, 36, 43, 0.08);
+  border-radius: 20px;
+  background: #fbfaf7;
+}
+
+.package-route-stop__index {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: rgba(216, 196, 109, 0.22);
+  color: var(--navy);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.package-route-stop__body {
+  display: grid;
+  gap: 4px;
+}
+
+.package-route-stop__body strong {
+  color: var(--navy);
+  font-size: 1rem;
+}
+
+.package-route-stop__body span,
+.package-route-stop__body small {
+  color: var(--muted);
+}
+
 .package-detail-stat-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

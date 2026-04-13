@@ -110,6 +110,7 @@ function normalizePackage(pkg) {
 
   return {
     ...pkg,
-    adminMeta: adminMeta || {}
+    adminMeta: adminMeta || {},
+    routeStops: Array.isArray(pkg.routeStops) ? pkg.routeStops : []
   };
 }

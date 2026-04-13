@@ -1,3 +1,5 @@
+import { resolveApiAssetUrl } from "./utils/media.js";
+
 export const liveMedia = {
   homeHero: "https://nbgstravel.co.za/wp-content/uploads/2025/05/ishan-seefromthesky-rj8fMHNPXbg-unsplash-1-scaled.jpg",
   introLeft: "https://nbgstravel.co.za/wp-content/uploads/2025/02/472998936_18052737236487047_7230927518770349952_n-1024x576.jpg",
@@ -470,7 +472,7 @@ export const categoryCards = [
 
 export function getPackageVisual(pkg) {
   if (!pkg) return liveMedia.packagesHero;
-  if (pkg.adminMeta?.backgroundListingImage) return pkg.adminMeta.backgroundListingImage;
+  if (pkg.adminMeta?.backgroundListingImage) return resolveApiAssetUrl(pkg.adminMeta.backgroundListingImage);
   if (pkg.slug === "visit-zanzibar-2026") return liveMedia.zanzibarHero;
   if ((pkg.package_category || "").toLowerCase().includes("group")) return liveMedia.packagesHero;
   return liveMedia.homeHero;

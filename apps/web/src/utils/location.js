@@ -18,3 +18,23 @@ export function formatLocationHierarchy(record, separator = " > ") {
 export function getPrimaryLocationLabel(record) {
   return getCityName(record) || getRegionName(record) || record?.country || record?.continent || "Location";
 }
+
+export function getRouteStops(record) {
+  return Array.isArray(record?.routeStops) ? record.routeStops : [];
+}
+
+export function getRouteStopLabel(stop) {
+  return stop?.city_name || stop?.cityName || stop?.region_name || stop?.regionName || stop?.country || stop?.continent || "";
+}
+
+export function formatRouteSummary(record, separator = " -> ") {
+  const labels = getRouteStops(record)
+    .map((stop) => getRouteStopLabel(stop))
+    .filter(Boolean);
+
+  if (labels.length) {
+    return labels.join(separator);
+  }
+
+  return formatLocationHierarchy(record, separator);
+}

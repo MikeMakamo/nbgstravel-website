@@ -24,6 +24,15 @@ const packageAdminMetaSchema = z
   .optional()
   .nullable();
 
+const packageRouteStopSchema = z.object({
+  continent: z.string().optional().nullable(),
+  country: z.string().optional().nullable(),
+  regionName: z.string().optional().nullable(),
+  cityName: z.string().optional().nullable(),
+  nightsAtStop: z.coerce.number().int().nonnegative().optional().nullable(),
+  note: z.string().optional().nullable()
+});
+
 const packageSchema = z.object({
   title: z.string().min(3),
   packageCategory: z.string().min(2),
@@ -44,7 +53,8 @@ const packageSchema = z.object({
   shortDescription: z.string().optional().nullable(),
   fullDescription: z.string().optional().nullable(),
   status: z.enum(["draft", "published", "archived"]).default("draft"),
-  adminMeta: packageAdminMetaSchema
+  adminMeta: packageAdminMetaSchema,
+  routeStops: z.array(packageRouteStopSchema).optional().default([])
 });
 
 export const packageRouter = Router();
@@ -60,7 +70,9 @@ packageRouter.get("/admin/list/all", requireAuth, async (req, res, next) => {
       `
     );
 
-    res.json({ packages: rows });
+    const packages = await attachRouteStops(rows);
+
+    res.json({ packages });
   } catch (error) {
     next(error);
   }
@@ -79,7 +91,9 @@ packageRouter.get("/", async (req, res, next) => {
       `
     );
 
-    res.json({ packages: rows });
+    const packages = await attachRouteStops(rows);
+
+    res.json({ packages });
   } catch (error) {
     next(error);
   }
@@ -129,13 +143,19 @@ packageRouter.get("/:slug", async (req, res, next) => {
       { packageId: pkg.id }
     );
 
+    const routeStops = await query(
+      `SELECT * FROM package_route_stops WHERE package_id = :packageId ORDER BY stop_order ASC, id ASC`,
+      { packageId: pkg.id }
+    );
+
     res.json({
       package: {
         ...pkg,
         pricingRules,
         inclusions,
         exclusions,
-        media
+        media,
+        routeStops
       }
     });
   } catch (error) {
@@ -185,6 +205,7 @@ packageRouter.post("/", requireAuth, requireRole("super_admin", "admin"), async 
     );
 
     await syncPackageMetaLists(result.insertId, data.adminMeta);
+    await syncPackageRouteStops(result.insertId, data.routeStops);
 
     res.status(201).json({ id: result.insertId, slug });
   } catch (error) {
@@ -249,6 +270,7 @@ packageRouter.put("/:id", requireAuth, requireRole("super_admin", "admin"), asyn
     );
 
     await syncPackageMetaLists(req.params.id, data.adminMeta);
+    await syncPackageRouteStops(req.params.id, data.routeStops);
 
     res.json({ success: true, slug });
   } catch (error) {
@@ -270,6 +292,7 @@ packageRouter.delete("/:id", requireAuth, requireRole("super_admin", "admin"), a
     await query(`DELETE FROM package_inclusions WHERE package_id = :id`, { id: req.params.id });
     await query(`DELETE FROM package_exclusions WHERE package_id = :id`, { id: req.params.id });
     await query(`DELETE FROM package_payment_plan_items WHERE package_id = :id`, { id: req.params.id });
+    await query(`DELETE FROM package_route_stops WHERE package_id = :id`, { id: req.params.id });
     await query(`DELETE FROM package_media WHERE package_id = :id`, { id: req.params.id });
     await query(`DELETE FROM packages WHERE id = :id`, { id: req.params.id });
 
@@ -326,4 +349,85 @@ async function syncPackageMetaLists(packageId, adminMeta) {
       }
     );
   }
+}
+
+function sanitizeRouteStops(routeStops) {
+  return (Array.isArray(routeStops) ? routeStops : [])
+    .map((stop) => ({
+      continent: stop?.continent || null,
+      country: stop?.country || null,
+      regionName: stop?.regionName || null,
+      cityName: stop?.cityName || null,
+      nightsAtStop: stop?.nightsAtStop ?? null,
+      note: stop?.note || null
+    }))
+    .filter((stop) => stop.continent || stop.country || stop.regionName || stop.cityName || stop.note || stop.nightsAtStop !== null);
+}
+
+async function syncPackageRouteStops(packageId, routeStops) {
+  const safeStops = sanitizeRouteStops(routeStops);
+
+  await query(`DELETE FROM package_route_stops WHERE package_id = :packageId`, { packageId });
+
+  for (const [index, stop] of safeStops.entries()) {
+    await query(
+      `
+        INSERT INTO package_route_stops (
+          package_id, stop_order, continent, country, region_name, city_name, nights_at_stop, note
+        )
+        VALUES (
+          :packageId, :stopOrder, :continent, :country, :regionName, :cityName, :nightsAtStop, :note
+        )
+      `,
+      {
+        packageId,
+        stopOrder: index,
+        continent: stop.continent,
+        country: stop.country,
+        regionName: stop.regionName,
+        cityName: stop.cityName,
+        nightsAtStop: stop.nightsAtStop,
+        note: stop.note
+      }
+    );
+  }
+}
+
+async function attachRouteStops(packages) {
+  const safePackages = Array.isArray(packages) ? packages : [];
+
+  if (!safePackages.length) {
+    return safePackages;
+  }
+
+  const params = {};
+  const placeholders = safePackages.map((pkg, index) => {
+    params[`packageId${index}`] = pkg.id;
+    return `:packageId${index}`;
+  });
+
+  const routeStops = await query(
+    `
+      SELECT *
+      FROM package_route_stops
+      WHERE package_id IN (${placeholders.join(", ")})
+      ORDER BY package_id ASC, stop_order ASC, id ASC
+    `,
+    params
+  );
+
+  const routeStopMap = new Map();
+
+  for (const stop of routeStops) {
+    if (!routeStopMap.has(stop.package_id)) {
+      routeStopMap.set(stop.package_id, []);
+    }
+
+    routeStopMap.get(stop.package_id).push(stop);
+  }
+
+  return safePackages.map((pkg) => ({
+    ...pkg,
+    routeStops: routeStopMap.get(pkg.id) || []
+  }));
 }

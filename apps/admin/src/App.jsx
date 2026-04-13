@@ -27,6 +27,7 @@ import StatusBadge from "./components/StatusBadge.jsx";
 import { peopleAssets, travelGalleryAssets } from "./assets.js";
 import { getAllCountryOptions, getCityOptions, getContinentOptions, getCountryOptions, getRegionOptions } from "./data/locationHierarchy.js";
 import { formatLocationHierarchy } from "./utils/location.js";
+import { resolveApiAssetUrl } from "./utils/media.js";
 
 const tokenStorageKey = "nbgs-admin-token";
 const sidebarStorageKey = "nbgs-admin-sidebar-open";
@@ -63,7 +64,8 @@ const initialPackageForm = {
   isLocalTrip: false,
   mainTripType: "",
   includesText: "",
-  excludesText: ""
+  excludesText: "",
+  routeStops: []
 };
 
 const initialVisaForm = {
@@ -74,6 +76,17 @@ const initialVisaForm = {
   description: "",
   status: "draft"
 };
+
+function createEmptyRouteStop() {
+  return {
+    continent: "",
+    country: "",
+    regionName: "",
+    cityName: "",
+    nightsAtStop: "",
+    note: ""
+  };
+}
 
 const sectionMeta = {
   dashboard: {
@@ -357,6 +370,48 @@ export default function App() {
     }));
   }
 
+  function addPackageRouteStop() {
+    setPackageForm((currentForm) => ({
+      ...currentForm,
+      routeStops: [...(currentForm.routeStops || []), createEmptyRouteStop()]
+    }));
+  }
+
+  function updatePackageRouteStop(index, patch) {
+    setPackageForm((currentForm) => ({
+      ...currentForm,
+      routeStops: (currentForm.routeStops || []).map((stop, stopIndex) => (stopIndex === index ? { ...stop, ...patch } : stop))
+    }));
+  }
+
+  function removePackageRouteStop(index) {
+    setPackageForm((currentForm) => ({
+      ...currentForm,
+      routeStops: (currentForm.routeStops || []).filter((_, stopIndex) => stopIndex !== index)
+    }));
+  }
+
+  function handleRouteStopContinentChange(index, value) {
+    updatePackageRouteStop(index, {
+      continent: value,
+      country: "",
+      regionName: ""
+    });
+  }
+
+  function handleRouteStopCountryChange(index, value) {
+    updatePackageRouteStop(index, {
+      country: value,
+      regionName: ""
+    });
+  }
+
+  function handleRouteStopRegionChange(index, value) {
+    updatePackageRouteStop(index, {
+      regionName: value
+    });
+  }
+
   function openEditPackage(pkg) {
     setEditingPackageId(pkg.id);
     setPackageForm(createPackageFormFromRecord(pkg));
@@ -495,7 +550,7 @@ export default function App() {
     const search = packageSearch.trim().toLowerCase();
     const matchesSearch =
       !search ||
-      [pkg.title, pkg.destination, pkg.country, pkg.continent, pkg.region_name, pkg.city_name, pkg.slug]
+      [pkg.title, pkg.destination, pkg.country, pkg.continent, pkg.region_name, pkg.city_name, pkg.slug, formatPackageRouteSummary(pkg.routeStops, pkg)]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(search));
     const matchesStatus = packageStatusFilter === "all" || pkg.status === packageStatusFilter;
@@ -878,6 +933,7 @@ export default function App() {
                                     <div className="record-primary">
                                       <strong>{pkg.title}</strong>
                                       <span>{formatLabel(pkg.package_category)}{pkg.adminMeta?.mainTripType ? ` | ${pkg.adminMeta.mainTripType}` : ""}</span>
+                                      {pkg.routeStops?.length ? <span>{formatPackageRouteSummary(pkg.routeStops, pkg)}</span> : null}
                                     </div>
                                   </div>
                                   <div className="row-actions">
@@ -1020,6 +1076,105 @@ export default function App() {
                     </div>
                   </SectionCard>
 
+                  <SectionCard
+                    eyebrow="Route"
+                    title="Trip route and stopovers"
+                    description="Add the actual path travelers will move through. Keep one stop for single-destination packages, or build the full journey for multi-city and multi-country trips."
+                    className="section-card--plain"
+                    actions={
+                      <div className="button-row">
+                        <button className="button button--secondary" type="button" onClick={addPackageRouteStop}>
+                          Add stop
+                        </button>
+                      </div>
+                    }
+                  >
+                    {packageForm.routeStops.length ? (
+                      <div className="route-stop-stack">
+                        {packageForm.routeStops.map((stop, index) => {
+                          const stopCountryOptions = getCountryOptions(stop.continent, stop.country);
+                          const stopRegionOptions = getRegionOptions(stop.continent, stop.country, stop.regionName);
+
+                          return (
+                            <article key={`route-stop-${index}`} className="route-stop-card">
+                              <div className="route-stop-card__header">
+                                <div>
+                                  <span className="eyebrow">Stop {index + 1}</span>
+                                  <h4>{stop.cityName || stop.country || "New stop"}</h4>
+                                </div>
+                                <button className="text-button" type="button" onClick={() => removePackageRouteStop(index)}>
+                                  Remove stop
+                                </button>
+                              </div>
+
+                              <div className="form-grid form-grid--two">
+                                <label className="field">
+                                  <span>Continent</span>
+                                  <DropdownSelect
+                                    value={stop.continent}
+                                    options={getContinentOptions(stop.continent)}
+                                    onChange={(value) => handleRouteStopContinentChange(index, value)}
+                                    placeholder="Select continent"
+                                  />
+                                </label>
+                                <label className="field">
+                                  <span>Country</span>
+                                  <DropdownSelect
+                                    value={stop.country}
+                                    options={stopCountryOptions}
+                                    onChange={(value) => handleRouteStopCountryChange(index, value)}
+                                    placeholder={stop.continent ? "Select country" : "Select continent first"}
+                                    disabled={!stop.continent}
+                                  />
+                                </label>
+                                <label className="field">
+                                  <span>Region / State / Province</span>
+                                  <DropdownSelect
+                                    value={stop.regionName}
+                                    options={stopRegionOptions}
+                                    onChange={(value) => handleRouteStopRegionChange(index, value)}
+                                    placeholder={stop.country ? "Select province / state" : "Select country first"}
+                                    disabled={!stop.country}
+                                  />
+                                </label>
+                                <label className="field">
+                                  <span>City</span>
+                                  <input
+                                    value={stop.cityName}
+                                    onChange={(event) => updatePackageRouteStop(index, { cityName: event.target.value })}
+                                    placeholder="Barcelona"
+                                  />
+                                </label>
+                                <label className="field">
+                                  <span>Nights at stop</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={stop.nightsAtStop}
+                                    onChange={(event) => updatePackageRouteStop(index, { nightsAtStop: event.target.value })}
+                                    placeholder="2"
+                                  />
+                                </label>
+                                <label className="field">
+                                  <span>Stop note</span>
+                                  <input
+                                    value={stop.note}
+                                    onChange={(event) => updatePackageRouteStop(index, { note: event.target.value })}
+                                    placeholder="Arrival city, beach stay, festival stop"
+                                  />
+                                </label>
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="empty-state route-stop-empty">
+                        No route stops added yet. Add one stop for a simple trip or build the full route for multi-stop packages.
+                      </div>
+                    )}
+                  </SectionCard>
+
                   <SectionCard eyebrow="Pricing and travel" title="Price setup" description="Match the package pricing language the sales team already uses." className="section-card--soft">
                     <div className="form-grid form-grid--two">
                       <label className="field">
@@ -1158,6 +1313,10 @@ export default function App() {
                     <div className="preview-card">
                       <span>Location path</span>
                       <p>{formatLocationHierarchy(packageForm)}</p>
+                    </div>
+                    <div className="preview-card">
+                      <span>Trip route</span>
+                      <p>{formatPackageRouteSummary(packageForm.routeStops, packageForm)}</p>
                     </div>
                     <div className="preview-card">
                       <span>Gallery</span>
@@ -1470,6 +1629,7 @@ function buildPackagePayload(form) {
     shortDescription: form.bio || form.shortDescription || "",
     fullDescription: form.describeTrip || form.fullDescription || "",
     status: form.status,
+    routeStops: normalizeRouteStopsForPayload(form.routeStops),
     adminMeta: {
       travelDateLabel: form.travelDateLabel || null,
       bio: form.bio || null,
@@ -1502,7 +1662,8 @@ function normalizePackages(rows) {
 
     return {
       ...pkg,
-      adminMeta: parsedMeta || {}
+      adminMeta: parsedMeta || {},
+      routeStops: Array.isArray(pkg.routeStops) ? pkg.routeStops : []
     };
   });
 }
@@ -1543,8 +1704,46 @@ function createPackageFormFromRecord(pkg) {
     isLocalTrip: Boolean(meta.isLocalTrip),
     mainTripType: meta.mainTripType || "",
     includesText: Array.isArray(meta.includes) ? meta.includes.join("\n") : "",
-    excludesText: Array.isArray(meta.excludes) ? meta.excludes.join("\n") : ""
+    excludesText: Array.isArray(meta.excludes) ? meta.excludes.join("\n") : "",
+    routeStops: normalizeRouteStopsForForm(pkg.routeStops)
   };
+}
+
+function normalizeRouteStopsForForm(routeStops) {
+  return (Array.isArray(routeStops) ? routeStops : []).map((stop) => ({
+    continent: stop?.continent || "",
+    country: stop?.country || "",
+    regionName: stop?.region_name || stop?.regionName || "",
+    cityName: stop?.city_name || stop?.cityName || "",
+    nightsAtStop: stop?.nights_at_stop ?? stop?.nightsAtStop ?? "",
+    note: stop?.note || ""
+  }));
+}
+
+function normalizeRouteStopsForPayload(routeStops) {
+  return (Array.isArray(routeStops) ? routeStops : [])
+    .map((stop) => ({
+      continent: stop?.continent || null,
+      country: stop?.country || null,
+      regionName: stop?.regionName || null,
+      cityName: stop?.cityName || null,
+      nightsAtStop: stop?.nightsAtStop === "" || stop?.nightsAtStop === undefined ? null : Number(stop.nightsAtStop),
+      note: stop?.note || null
+    }))
+    .filter((stop) => stop.continent || stop.country || stop.regionName || stop.cityName || stop.note || stop.nightsAtStop !== null);
+}
+
+function formatPackageRouteSummary(routeStops, record) {
+  const safeStops = normalizeRouteStopsForForm(routeStops);
+  const labels = safeStops
+    .map((stop) => stop.cityName || stop.country || stop.continent)
+    .filter(Boolean);
+
+  if (labels.length) {
+    return labels.join(" -> ");
+  }
+
+  return formatLocationHierarchy(record);
 }
 
 function linesToArray(value) {
@@ -1558,7 +1757,7 @@ function getPackageImage(pkg) {
   const adminImage = pkg?.adminMeta?.backgroundListingImage;
 
   if (adminImage) {
-    return adminImage;
+    return resolveApiAssetUrl(adminImage);
   }
 
   return travelGalleryAssets[Number(pkg?.id || 0) % travelGalleryAssets.length];
@@ -1566,7 +1765,7 @@ function getPackageImage(pkg) {
 
 function getPackageImageFromForm(form) {
   if (form.backgroundListingImage) {
-    return form.backgroundListingImage;
+    return resolveApiAssetUrl(form.backgroundListingImage);
   }
 
   return travelGalleryAssets[0];

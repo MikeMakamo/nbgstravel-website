@@ -480,6 +480,39 @@ img {
   gap: 20px;
 }
 
+.route-stop-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.route-stop-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(10, 36, 43, 0.1);
+  border-radius: 24px;
+  background: #fff;
+}
+
+.route-stop-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.route-stop-card__header h4 {
+  margin: 6px 0 0;
+  font-size: 1.05rem;
+}
+
+.route-stop-empty {
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
 .package-editor-sidebar,
 .booking-detail-panel {
   position: sticky;
