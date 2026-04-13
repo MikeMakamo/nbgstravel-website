@@ -9,9 +9,27 @@ const projectRoot = path.resolve(__dirname, "..");
 const deploymentRoot = path.resolve(projectRoot, "deployment/live-package-sync");
 const uploadsSource = path.resolve(projectRoot, "apps/api/uploads/imported/live-packages");
 
+function pad(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatSqlDate(value) {
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
+}
+
+function formatSqlDateTime(value) {
+  return `${formatSqlDate(value)} ${pad(value.getHours())}:${pad(value.getMinutes())}:${pad(value.getSeconds())}`;
+}
+
 function sqlValue(value) {
   if (value === null || value === undefined) {
     return "NULL";
+  }
+
+  if (value instanceof Date) {
+    const isDateOnly = value.getHours() === 0 && value.getMinutes() === 0 && value.getSeconds() === 0 && value.getMilliseconds() === 0;
+    const formatted = isDateOnly ? formatSqlDate(value) : formatSqlDateTime(value);
+    return `'${formatted}'`;
   }
 
   if (typeof value === "number") {
@@ -20,6 +38,10 @@ function sqlValue(value) {
 
   if (typeof value === "boolean") {
     return value ? "1" : "0";
+  }
+
+  if (typeof value === "object") {
+    return `'${JSON.stringify(value).replace(/\\/g, "\\\\").replace(/'/g, "''")}'`;
   }
 
   return `'${String(value).replace(/\\/g, "\\\\").replace(/'/g, "''")}'`;
