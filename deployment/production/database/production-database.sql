@@ -1,5 +1,5 @@
 -- NBGSTRAVEL production deployment export
--- Generated at 2026-04-13T02:27:00.748Z
+-- Generated at 2026-04-14T00:18:44.190Z
 -- This export excludes volatile local test/log tables.
 
 SET FOREIGN_KEY_CHECKS = 0;
