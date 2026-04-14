@@ -53,6 +53,7 @@ or the generated copy:
 
 Set real values for:
 - `JWT_SECRET`
+- `DIAGNOSTICS_TOKEN` only while debugging production issues
 - `DB_HOST`
 - `DB_PORT`
 - `DB_NAME`
@@ -68,6 +69,12 @@ APP_URL=https://nbgstravel.co.za
 ADMIN_URL=https://admin.nbgstravel.co.za
 API_PUBLIC_URL=https://api.nbgstravel.co.za/api
 ```
+
+Temporary diagnostics endpoint:
+- `GET /api/diagnostics/runtime`
+- send header `x-diagnostics-token: <DIAGNOSTICS_TOKEN>`
+
+Use it only while debugging. Remove or blank `DIAGNOSTICS_TOKEN` after the issue is resolved.
 
 ## 4. API install and schema
 

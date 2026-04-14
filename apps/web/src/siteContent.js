@@ -1,42 +1,46 @@
 import { resolveApiAssetUrl } from "./utils/media.js";
 
+function uploadImage(path) {
+  return resolveApiAssetUrl(path);
+}
+
 export const liveMedia = {
-  homeHero: "https://nbgstravel.co.za/wp-content/uploads/2025/05/ishan-seefromthesky-rj8fMHNPXbg-unsplash-1-scaled.jpg",
-  introLeft: "https://nbgstravel.co.za/wp-content/uploads/2025/02/472998936_18052737236487047_7230927518770349952_n-1024x576.jpg",
-  introRight: "https://nbgstravel.co.za/wp-content/uploads/2025/02/480224362_642660051481760_5361578353347056917_n-e1740481322317.jpg",
-  packagesHero: "https://nbgstravel.co.za/wp-content/uploads/2025/02/472998936_18052737236487047_7230927518770349952_n.jpg",
-  zanzibarHero: "https://nbgstravel.co.za/wp-content/uploads/2025/07/222782-Zanzibar.jpg.webp",
+  homeHero: uploadImage("/uploads/imported/live-packages/afronation-portugal-2026/05-praia-marinha-beach-lagoa-algarve-1024x683.jpg"),
+  introLeft: uploadImage("/uploads/imported/live-packages/visit-zanzibar-2026/01-222782-zanzibar-jpg-1024x576.webp"),
+  introRight: uploadImage("/uploads/imported/live-packages/discover-thailand-2026/03-screenshot-241-1024x368.png"),
+  packagesHero: uploadImage("/uploads/imported/live-packages/visit-spain-2026/01-aa5231d66880b52a4ad043b59d1585b2-1024x683.jpg"),
+  zanzibarHero: uploadImage("/uploads/imported/live-packages/visit-zanzibar-2026/01-222782-zanzibar-jpg-1024x576.webp"),
   continents: [
     {
       title: "AFRICA",
       subtitle: "VISIT AFRICA TODAY",
-      image: "https://nbgstravel.co.za/wp-content/uploads/2025/03/travel-vacation-Poster-4.jpg"
+      image: uploadImage("/uploads/imported/live-packages/visit-zanzibar-2026/02-ali-abdul-rahman-cqbslz-lp00-unsplash-820x1024.jpg")
     },
     {
       title: "AUSTRALIA",
       subtitle: "VISIT AUSTRALIA!",
-      image: "https://nbgstravel.co.za/wp-content/uploads/2025/04/premium_photo-1666983888610-2362b2433009.webp"
+      image: "/assets/images/355464106_930846967974321_4531387690846332912_n.jpg"
     },
     {
       title: "THE AMERICAS",
       subtitle: "SEE & VISIT THE AMERICAN CONTINENT",
-      image: "https://nbgstravel.co.za/wp-content/uploads/2025/04/Black-Green-Graffiti-Arts-Street-Culture-Logo-8.webp"
+      image: uploadImage("/uploads/imported/live-packages/discover-brazil-2026/02-screenshot-243.png")
     },
     {
       title: "ASIA",
       subtitle: "VISIT ASIA",
-      image: "https://nbgstravel.co.za/wp-content/uploads/2025/03/travel-vacation-Poster-3.jpg"
+      image: uploadImage("/uploads/imported/live-packages/discover-tokyo-2026/02-tokyo-for-digital-nomads-1024x683.jpg")
     },
     {
       title: "EUROPE",
       subtitle: "SEE EUROPEAN PACKAGES",
-      image: "https://nbgstravel.co.za/wp-content/uploads/2025/03/travel-vacation-Poster-2.jpg"
+      image: uploadImage("/uploads/imported/live-packages/discover-greece-2026/01-gettyimages-773131123-5c27f7c346e0fb000179ee94-1024x680.jpg")
     }
   ],
   previousTrips: [
-    "https://nbgstravel.co.za/wp-content/uploads/2025/02/472998936_18052737236487047_7230927518770349952_n-1024x576.jpg",
-    "https://nbgstravel.co.za/wp-content/uploads/2025/02/480224362_642660051481760_5361578353347056917_n-e1740481322317.jpg",
-    "https://nbgstravel.co.za/wp-content/uploads/2025/05/ishan-seefromthesky-rj8fMHNPXbg-unsplash-1-scaled.jpg",
+    uploadImage("/uploads/imported/live-packages/visit-zanzibar-2026/03-colin-watts-m1obxvswvhy-unsplash-1024x685.jpg"),
+    uploadImage("/uploads/imported/live-packages/discover-greece-2026/02-intrepid-travel-greece-mykonos-tavern-by-sea-2-1024x684.jpg"),
+    uploadImage("/uploads/imported/live-packages/afronation-portugal-2026/04-dsc04503-768x512.jpg"),
     "/assets/images/profile picture 1.jpg",
     "/assets/images/profile picture 2.jpg",
     "/assets/images/profile picture 3.jpg",
@@ -216,7 +220,7 @@ export const visaPageContent = {
       title: "Schengen Visa",
       apiAliases: ["Schengen Visa"],
       country: "Europe",
-      imageUrl: "https://nbgstravel.co.za/wp-content/uploads/2025/08/Flag_of_Europe.svg.png",
+      imageUrl: uploadImage("/uploads/imported/live-packages/discover-greece-2026/03-05-parthenonacropolis-38687611-1-768x512.webp"),
       feeNote: "Service Fee (Visa fee not Included)",
       processingTimeLabel: "5 - 15 working days",
       applicationFee: 2500,

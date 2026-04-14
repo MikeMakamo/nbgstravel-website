@@ -218,19 +218,23 @@ Fresh-server deployment order:
 4. In \`apps/api\`, run:
    - \`npm install --omit=dev\`
    - \`npm run migrate\`
-5. Restore the production content snapshot:
+5. If needed while debugging, temporarily set \`DIAGNOSTICS_TOKEN\` and call:
+   - \`GET /api/diagnostics/runtime\`
+   - header: \`x-diagnostics-token: <DIAGNOSTICS_TOKEN>\`
+6. Restore the production content snapshot:
    - \`npm run restore:production\`
    - or \`npm run setup:production\` to run migrate + restore in one go
-6. Copy \`uploads/\` into the live API uploads folder so it becomes \`apps/api/uploads/\`.
-7. Upload \`web-dist/\` to the main domain document root.
-8. Upload \`admin-dist/\` to the admin subdomain document root.
-9. Restart the Node.js app.
+7. Copy \`uploads/\` into the live API uploads folder so it becomes \`apps/api/uploads/\`.
+8. Upload \`web-dist/\` to the main domain document root.
+9. Upload \`admin-dist/\` to the admin subdomain document root.
+10. Restart the Node.js app.
 
 Notes:
 - This export intentionally excludes local test/log tables like bookings, inquiries, abandoned leads, email logs, and review sync logs.
 - The imported content keeps the current local package set and matching uploads.
 - Do not run \`npm run seed\` afterward unless you intentionally want to re-seed defaults.
 - If you prefer a manual fallback, \`database/production-database.sql\` can still be imported with phpMyAdmin.
+- Remove or blank \`DIAGNOSTICS_TOKEN\` after live debugging is complete.
 `;
 }
 
@@ -239,6 +243,7 @@ function buildApiEnvExample() {
 ADMIN_URL=${productionConfig.adminUrl}
 API_PUBLIC_URL=${productionConfig.apiUrl}
 JWT_SECRET=replace-with-a-long-random-secret
+DIAGNOSTICS_TOKEN=temporary-debug-token-remove-after-use
 
 DB_HOST=localhost
 DB_PORT=3306
